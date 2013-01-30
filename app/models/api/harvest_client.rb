@@ -8,13 +8,14 @@ class Api::HarvestClient
     @client.projects.all
   end
 
-  def all_single_users(project_id)
+  def all_users(project_id)
     assignments = @client.user_assignments.all(project_id)
-    users = []
+    users = @client.users.all
+    assigned_users = []
     assignments.each do |a|
-      users << @client.users.find(a.user_id)
+      assigned_users << users.select {|u| u.id == a.user_id}.first
     end
-    users
+    assigned_users
   end
 
   def create(task_name, project_id)

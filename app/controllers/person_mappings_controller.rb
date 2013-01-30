@@ -8,7 +8,7 @@ class PersonMappingsController < ApplicationController
   def find_single_harvest_users
     unless @harvest_single_users
       api = Api::HarvestClient.new @integration.user
-      @harvest_single_users = api.all_single_users(@integration.harvest_project_id)
+      @harvest_single_users = api.all_users(@integration.harvest_project_id)
     end
     @harvest_single_users
   end
@@ -16,7 +16,7 @@ class PersonMappingsController < ApplicationController
   def find_single_pivotal_users
     unless @pivotal_single_users
       api = Api::PivotalClient.new @integration.user
-      @pivotal_single_users = api.all_single_members(@integration.harvest_project_id)
+      @pivotal_single_users = api.all_users(@integration.harvest_project_id)
     end
     @pivotal_single_users
   end
