@@ -1,0 +1,27 @@
+<h1>Listing integrations</h1>
+
+<table>
+  <tr>
+    <th>Harvest project</th>
+    <th>Pivotal project</th>
+    <th>User</th>
+    <th></th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @integrations.each do |integration| %>
+  <tr>
+    <td><%= integration.harvest_project_id %></td>
+    <td><%= integration.pivotal_project_id %></td>
+    <td><%= integration.user %></td>
+    <td><%= link_to 'Show', integration %></td>
+    <td><%= link_to 'Edit', edit_user_integration_path([@user, integration]) %></td>
+    <td><%= link_to 'Destroy', integration, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New Integration', new_user_integration_path(@user) %>

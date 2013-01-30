@@ -1,0 +1,20 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Harvest project:</b>
+  <%= @integration.harvest_project_id %>
+</p>
+
+<p>
+  <b>Pivotal project:</b>
+  <%= @integration.pivotal_project_id %>
+</p>
+
+<p>
+  <b>User:</b>
+  <%= @integration.user %>
+</p>
+
+
+<%= link_to 'Edit', edit_user_integration_path(@user, @integration) %> |
+<%= link_to 'Back', user_integrations_path(@user) %>

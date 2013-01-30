@@ -1,6 +1,15 @@
 Pivotalharvested::Application.routes.draw do
+
+  resources :integrations, only: []  do
+    member do
+      post 'callback'
+    end
+  end
+
   root to: "home#index"
-  resources :users
+  resources :users do
+    resources :integrations
+  end
 
 
   # The priority is based upon order of creation:

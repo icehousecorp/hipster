@@ -1,0 +1,11 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  harvest_project_id: 1
+  pivotal_project_id: 1
+  user_id: 
+
+two:
+  harvest_project_id: 1
+  pivotal_project_id: 1
+  user_id: 
