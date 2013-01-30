@@ -56,6 +56,9 @@ class IntegrationsController < ApplicationController
     @pivotal_projects = pivotal_projects
   end
 
+  def callback
+  end
+
   # GET /integrations
   # GET /integrations.json
   def index
@@ -138,3 +141,119 @@ class IntegrationsController < ApplicationController
     end
   end
 end
+
+
+
+
+#   def callback
+#     @mapping = ProjectMapping.find(params[:id])
+#     activity = ActivityParam.new(params)
+#     case activity.type
+#     when CREATE_STORY:
+#       harvest_api.create(activity.task_name, activity.project_id)
+#     when START_STORY:
+#       task_id = find_task_for_story(activity.story_id)
+#       harvest_api.start_task(task_id, @mapping.harvest_project_id, activity.user_id)
+#     when FINISH_STORY:
+#       task_id = find_task_for_story(activity.story_id)
+#       harvest_api.stop_task(task_id, activity.user_id)
+#     else
+#       # do nothing just log it
+#     end
+#     # persist activity param incase we need it in the future
+#     store(activity)
+#   end
+
+#   def store
+#     ActivityLog.create(text: activity.to_json, mapping_id: @mapping.id)
+#   end
+
+#   def harvest_api
+#     User user = @mapping.user
+#     @harvest ||= HarvestApi.new(user.harvest_subdomain, user.harvest_username, user.harvest_password)
+#   end
+
+#   def find_task_for_story(story_id)
+#     TaskStory.where(story_id: story_id).first.try(:task_id)
+#   end
+# end
+
+# class HarvestApi
+#   def initialize(subdomain, username, password)
+#     @client = Harvest.client(subdomain, username, password)
+#   end
+
+#   def create(task_name, project_id)
+#     task = Harvest::Task.new
+#     task.name = task_name
+#     task = @client.task.create(task)
+#     assignment = Harvest::TaskAssignment.new
+#     assignment.task = task.id
+#     assignment.project = project_id
+#     @client.task_assignment.create(assignment)
+#   end
+
+#   def start_task(task_id, harvest_project_id, user_id)
+#     entries = find_entry(user_id, task_id)
+#     if entries.empty?
+#       entry = Harvest::TimeEntry.new
+#       entry.project_id = harvest_project_id
+#       entry.task_id = task_id
+#       entry.user_id = user_id
+#       @client.time.create(entry)
+#     end
+#   end
+
+#   def stop_task(task_id, user_id)
+#     entries = find_entry(user_id, task_id)
+#     @client.time.toggle() unless entries.empty?
+#   end
+
+#   def find_entry(user_id, task_id)
+#     entries = @client.time.all(Time.now, user_id).select do |entry|
+#       entry.task_id == task_id && entry.ended_at.nil?
+#     end
+#   end
+# end
+
+# class ActivityParam
+#   CREATE_STORY = 0
+#   START_STORY = 1
+#   FINISH_STORY = 2
+
+#   attr_accessor :id, :event_type, :project_id, :author, :description, :story_id, :story_name, :story_state
+#   def initialize params={}
+#     self.id = params[:id]
+#     self.event_type = params[:event_type]
+#     self.project_id = params[:project_id]
+#     self.author = params[:author]
+#     self.description = params[:description]
+#     self.story_id = params[:stories][0][:id]
+#     self.story_name = params[:stories][0][:name]
+#     self.story_state = params[:stories][0][:current_state]
+#   end
+
+#   def type
+#     if event_type == 'story_create'
+#       return CREATE_STORY
+#     end
+
+#     if event_type == 'story_update'
+#       case story_state
+#       when 'started'
+#         return START_STORY
+#       when 'finished'
+#         return FINISH_STORY
+#       end
+#     end
+#   end
+
+#   def user_id
+#     Person.where(pivotal_name: author).harvest_id
+#   end
+
+#   def task_name
+#     "[##{story_id}] #{story_name}"
+#   end
+# end
+
