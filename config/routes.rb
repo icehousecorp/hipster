@@ -4,7 +4,9 @@ Pivotalharvested::Application.routes.draw do
     member do
       post 'callback'
     end
+    resources :person_mappings, except: [:show, :edit, :destroy]
   end
+  resources :person_mappings, only: [:show, :edit, :destroy]
 
   root to: "home#index"
   resources :users do

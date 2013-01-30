@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  harvest_id: 1
+  email: MyString
+  pivotal_name: MyString
+  integration: 
+
+two:
+  harvest_id: 1
+  email: MyString
+  pivotal_name: MyString
+  integration: 

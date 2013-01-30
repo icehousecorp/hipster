@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130130092401) do
+ActiveRecord::Schema.define(:version => 20130130105933) do
 
   create_table "integrations", :force => true do |t|
     t.integer  "harvest_project_id"
@@ -22,6 +22,17 @@ ActiveRecord::Schema.define(:version => 20130130092401) do
   end
 
   add_index "integrations", ["user_id"], :name => "index_integrations_on_user_id"
+
+  create_table "person_mappings", :force => true do |t|
+    t.integer  "harvest_id"
+    t.string   "email"
+    t.string   "pivotal_name"
+    t.integer  "integration_id"
+    t.datetime "created_at",     :null => false
+    t.datetime "updated_at",     :null => false
+  end
+
+  add_index "person_mappings", ["integration_id"], :name => "index_person_mappings_on_integration_id"
 
   create_table "users", :force => true do |t|
     t.integer  "pivotal_id"

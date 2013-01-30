@@ -1,0 +1,29 @@
+<h1>Listing person_mappings</h1>
+
+<table>
+  <tr>
+    <th>Harvest</th>
+    <th>Email</th>
+    <th>Pivotal name</th>
+    <th>Integration</th>
+    <th></th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @person_mappings.each do |person_mapping| %>
+  <tr>
+    <td><%= person_mapping.harvest_id %></td>
+    <td><%= person_mapping.email %></td>
+    <td><%= person_mapping.pivotal_name %></td>
+    <td><%= person_mapping.integration %></td>
+    <td><%= link_to 'Show', person_mapping_path %></td>
+    <td><%= link_to 'Edit', edit_person_mapping_path(person_mapping) %></td>
+    <td><%= link_to 'Destroy', person_mapping, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New Person mapping', new_integration_person_mapping_path(@integration) %>

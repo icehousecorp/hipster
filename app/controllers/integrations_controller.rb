@@ -178,82 +178,44 @@ end
 #   end
 # end
 
-# class HarvestApi
-#   def initialize(subdomain, username, password)
-#     @client = Harvest.client(subdomain, username, password)
-#   end
+class ActivityParam
+  CREATE_STORY = 0
+  START_STORY = 1
+  FINISH_STORY = 2
 
-#   def create(task_name, project_id)
-#     task = Harvest::Task.new
-#     task.name = task_name
-#     task = @client.task.create(task)
-#     assignment = Harvest::TaskAssignment.new
-#     assignment.task = task.id
-#     assignment.project = project_id
-#     @client.task_assignment.create(assignment)
-#   end
+  attr_accessor :id, :event_type, :project_id, :author, :description, :story_id, :story_name, :story_state
+  def initialize params={}
+    self.id = params[:id]
+    self.event_type = params[:event_type]
+    self.project_id = params[:project_id]
+    self.author = params[:author]
+    self.description = params[:description]
+    self.story_id = params[:stories][0][:id]
+    self.story_name = params[:stories][0][:name]
+    self.story_state = params[:stories][0][:current_state]
+  end
 
-#   def start_task(task_id, harvest_project_id, user_id)
-#     entries = find_entry(user_id, task_id)
-#     if entries.empty?
-#       entry = Harvest::TimeEntry.new
-#       entry.project_id = harvest_project_id
-#       entry.task_id = task_id
-#       entry.user_id = user_id
-#       @client.time.create(entry)
-#     end
-#   end
+  def type
+    if event_type == 'story_create'
+      return CREATE_STORY
+    end
 
-#   def stop_task(task_id, user_id)
-#     entries = find_entry(user_id, task_id)
-#     @client.time.toggle() unless entries.empty?
-#   end
+    if event_type == 'story_update'
+      case story_state
+      when 'started'
+        return START_STORY
+      when 'finished'
+        return FINISH_STORY
+      end
+    end
+  end
 
-#   def find_entry(user_id, task_id)
-#     entries = @client.time.all(Time.now, user_id).select do |entry|
-#       entry.task_id == task_id && entry.ended_at.nil?
-#     end
-#   end
-# end
+  def user_id
+    Person.where(pivotal_name: author).harvest_id
+  end
 
-# class ActivityParam
-#   CREATE_STORY = 0
-#   START_STORY = 1
-#   FINISH_STORY = 2
-
-#   attr_accessor :id, :event_type, :project_id, :author, :description, :story_id, :story_name, :story_state
-#   def initialize params={}
-#     self.id = params[:id]
-#     self.event_type = params[:event_type]
-#     self.project_id = params[:project_id]
-#     self.author = params[:author]
-#     self.description = params[:description]
-#     self.story_id = params[:stories][0][:id]
-#     self.story_name = params[:stories][0][:name]
-#     self.story_state = params[:stories][0][:current_state]
-#   end
-
-#   def type
-#     if event_type == 'story_create'
-#       return CREATE_STORY
-#     end
-
-#     if event_type == 'story_update'
-#       case story_state
-#       when 'started'
-#         return START_STORY
-#       when 'finished'
-#         return FINISH_STORY
-#       end
-#     end
-#   end
-
-#   def user_id
-#     Person.where(pivotal_name: author).harvest_id
-#   end
-
-#   def task_name
-#     "[##{story_id}] #{story_name}"
-#   end
-# end
+  def task_name
+    "[##{story_id}] #{story_name}"
+  end
+end
 

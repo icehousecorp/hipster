@@ -1,0 +1,25 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Harvest:</b>
+  <%= @person_mapping.harvest_id %>
+</p>
+
+<p>
+  <b>Email:</b>
+  <%= @person_mapping.email %>
+</p>
+
+<p>
+  <b>Pivotal name:</b>
+  <%= @person_mapping.pivotal_name %>
+</p>
+
+<p>
+  <b>Integration:</b>
+  <%= @person_mapping.integration %>
+</p>
+
+
+<%= link_to 'Edit', edit_person_mapping_path(@person_mapping) %> |
+<%= link_to 'Back', person_mappings_path %>
