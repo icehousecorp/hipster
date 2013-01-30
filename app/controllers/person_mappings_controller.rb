@@ -1,5 +1,5 @@
 class PersonMappingsController < ApplicationController
-  before_filter :find_integration
+  before_filter :find_integration, except: [:show, :edit, :destroy]
 
   def find_integration
     @integration = Integration.find(params[:integration_id])
@@ -24,7 +24,7 @@ class PersonMappingsController < ApplicationController
   # GET /person_mappings
   # GET /person_mappings.json
   def index
-    @person_mappings = PersonMapping.all
+    @person_mappings = PersonMapping.where(integration_id: params[:integration_id])
 
     respond_to do |format|
       format.html # index.html.erb
