@@ -6,10 +6,54 @@ class IntegrationsController < ApplicationController
     @user = User.find(params[:user_id])
   end
 
+  class ProjectCache
+    attr_accessor :id, :name
+    def initialize project=nil
+      self.id = project.try(:id)
+      self.name = project.try(:name)
+    end
+    def to_hash
+      {id: self.id, name: self.name}
+    end
+    def self.new_from_hash hash
+      instance = new
+      instance.id = hash[:id]
+      instance.name = hash[:name]
+      instance
+    end
+  end
+
+  def harvest_projects
+    projects = session[:harvest_projects]
+    unless projects
+      projects = Api::HarvestClient.new(@user).all_projects
+      projects = projects.collect do |p|
+        ProjectCache.new(p)
+      end
+      session[:harvest_projects] = projects.map(&:to_hash)
+    end
+    session[:harvest_projects].collect do |hash|
+      ProjectCache.new_from_hash(hash)
+    end
+  end
+
+  def pivotal_projects
+    projects = session[:pivotal_projects]
+    unless projects
+      projects = Api::PivotalClient.new(@user).all_projects
+      projects = projects.collect do |p|
+        ProjectCache.new(p)
+      end
+      session[:pivotal_projects] = projects.map(&:to_hash)
+    end
+    session[:pivotal_projects].collect do |hash|
+      ProjectCache.new_from_hash(hash)
+    end
+  end
+
   def fetch_projects
-    api = Api::HarvestClient.new(@user)
-    @harvest_projects = api.all_projects
-    @pivotal_projects = []
+    @harvest_projects = harvest_projects
+    @pivotal_projects = pivotal_projects
   end
 
   # GET /integrations
@@ -57,12 +101,10 @@ class IntegrationsController < ApplicationController
 
     respond_to do |format|
       if @integration.save
-        format.html { redirect_to @integration, notice: 'Integration was successfully created.' }
-        format.json { render json: @integration, status: :created, location: @integration }
+        format.html { redirect_to user_integration_path(@user, @integration), notice: 'Integration was successfully created.' }
       else
         fetch_projects
         format.html { render action: "new" }
-        format.json { render json: @integration.errors, status: :unprocessable_entity }
       end
     end
   end

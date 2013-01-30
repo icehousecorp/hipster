@@ -2,5 +2,5 @@
 
 <%= render 'form' %>
 
-<%= link_to 'Show', @integration %> |
-<%= link_to 'Back', integrations_path %>
+<%= link_to 'Show', user_integration_path(@user.id, @integration.id) %> |
+<%= link_to 'Back', user_integrations_path(@user) %>
