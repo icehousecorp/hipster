@@ -6,19 +6,17 @@ class PersonMappingsController < ApplicationController
   end
 
   def find_single_harvest_users
-    unless @harvest_single_users
+    @harvest_single_users ||= Rails.cache.fetch("harvest_users_#{@integration.id}", expires_in: 5.minutes) do
       api = Api::HarvestClient.new @integration.user
-      @harvest_single_users = api.all_users(@integration.harvest_project_id)
+      api.all_users(@integration.harvest_project_id)
     end
-    @harvest_single_users
   end
 
   def find_single_pivotal_users
-    unless @pivotal_single_users
+    @pivotal_single_users ||= Rails.cache.fetch("pivotal_users_#{@integration.id}", expires_in: 5.minutes) do
       api = Api::PivotalClient.new @integration.user
-      @pivotal_single_users = api.all_users(@integration.harvest_project_id)
+      api.all_users(@integration.harvest_project_id)
     end
-    @pivotal_single_users
   end
 
   # GET /person_mappings
