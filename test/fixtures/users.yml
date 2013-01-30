@@ -1,0 +1,19 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  pivotal_id: 1
+  pivotal_username: MyString
+  pivotal_password: MyString
+  harvest_subdomain: MyString
+  harvest_id: 1
+  harvest_username: MyString
+  harvest_password: MyString
+
+two:
+  pivotal_id: 1
+  pivotal_username: MyString
+  pivotal_password: MyString
+  harvest_subdomain: MyString
+  harvest_id: 1
+  harvest_username: MyString
+  harvest_password: MyString
