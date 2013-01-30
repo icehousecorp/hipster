@@ -15,6 +15,11 @@
   <%= @integration.user %>
 </p>
 
+<p>
+  <b>Callback:</b>
+  <%= callback_integration_url(@integration) %>
+</p>
+
 
 <%= link_to 'Edit', edit_user_integration_path(@user, @integration) %> |
 <%= link_to 'Back', user_integrations_path(@user) %>
