@@ -5,6 +5,22 @@ class PersonMappingsController < ApplicationController
     @integration = Integration.find(params[:integration_id])
   end
 
+  def find_single_harvest_users
+    unless @harvest_single_users
+      api = Api::HarvestClient.new @integration.user
+      @harvest_single_users = api.all_single_users(@integration.harvest_project_id)
+    end
+    @harvest_single_users
+  end
+
+  def find_single_pivotal_users
+    unless @pivotal_single_users
+      api = Api::PivotalClient.new @integration.user
+      @pivotal_single_users = api.all_single_members(@integration.harvest_project_id)
+    end
+    @pivotal_single_users
+  end
+
   # GET /person_mappings
   # GET /person_mappings.json
   def index
@@ -30,7 +46,9 @@ class PersonMappingsController < ApplicationController
   # GET /person_mappings/new
   # GET /person_mappings/new.json
   def new
-    @person_mapping = PersonMapping.new
+    find_single_harvest_users
+    find_single_pivotal_users
+    @person_mapping = PersonMapping.new(integration_id: params[:integration_id])
 
     respond_to do |format|
       format.html # new.html.erb

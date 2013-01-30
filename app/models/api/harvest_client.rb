@@ -1,10 +1,20 @@
 class Api::HarvestClient
+  attr_accessor :client
   def initialize(user)
     @client = Harvest.client(user.harvest_subdomain, user.harvest_username, user.harvest_password)
   end
 
   def all_projects
     @client.projects.all
+  end
+
+  def all_single_users(project_id)
+    assignments = @client.user_assignments.all(project_id)
+    users = []
+    assignments.each do |a|
+      users << @client.users.find(a.user_id)
+    end
+    users
   end
 
   def create(task_name, project_id)
@@ -37,5 +47,11 @@ class Api::HarvestClient
     entries = @client.time.all(Time.now, user_id).select do |entry|
       entry.task_id == task_id && entry.ended_at.nil?
     end
+  end
+end
+
+class Harvest::User
+  def name
+    "#{first_name} #{last_name}"
   end
 end
