@@ -201,6 +201,7 @@ class ActivityParam
   attr_accessor :id, :event_type, :project_id, :author, :description, :story_id, :story_name, :story_state
   def initialize params={}
     self.id = params[:id]
+    params = params[:activity]
     self.event_type = params[:event_type]
     self.project_id = params[:project_id]
     self.author = params[:author]
