@@ -35,6 +35,7 @@ class Api::HarvestClient
       entry = Harvest::TimeEntry.new
       entry.project_id = harvest_project_id
       entry.task_id = task_id
+      puts "create time with task_id: #{task_id} and user: #{user_id}"
       @client.time.create(entry, user_id)
     end
   end
