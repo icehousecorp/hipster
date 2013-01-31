@@ -1,22 +1,35 @@
 class PersonMappingsController < ApplicationController
+  CACHE_PERIODE = 5.minutes
   before_filter :find_integration, except: [:show, :edit, :destroy]
 
   def find_integration
     @integration = Integration.find(params[:integration_id])
   end
 
-  def find_single_harvest_users
-    @harvest_single_users ||= Rails.cache.fetch("harvest_users_#{@integration.id}", expires_in: 5.minutes) do
+  def find_all_harvest_users
+    Rails.cache.fetch("harvest_users_#{@integration.id}", expires_in: CACHE_PERIODE) do
       api = Api::HarvestClient.new @integration.user
       api.all_users(@integration.harvest_project_id)
     end
   end
 
-  def find_single_pivotal_users
-    @pivotal_single_users ||= Rails.cache.fetch("pivotal_users_#{@integration.id}", expires_in: 5.minutes) do
+  def find_single_harvest_users
+    @harvest_single_users ||= find_all_harvest_users
+    mapped_id = @integration.person_mappings.map(&:harvest_id)
+    @harvest_single_users.reject!{|user| mapped_id.include?(user.id) }
+  end
+
+  def find_all_pivotal_users
+    Rails.cache.fetch("pivotal_users_#{@integration.id}", expires_in: CACHE_PERIODE) do
       api = Api::PivotalClient.new @integration.user
       api.all_users(@integration.harvest_project_id)
     end
+  end
+
+  def find_single_pivotal_users
+    @pivotal_single_users ||= find_all_pivotal_users
+    mapped_email = @integration.person_mappings.map(&:email)
+    @pivotal_single_users.reject!{|user| mapped_email.include?(user.email) }
   end
 
   # GET /person_mappings
@@ -59,10 +72,21 @@ class PersonMappingsController < ApplicationController
     @person_mapping = PersonMapping.find(params[:id])
   end
 
+  def person_mapping_params
+    pivotal_id = params[:person_mapping].delete(:pivotal_name)
+    pivotal_users = find_all_pivotal_users
+    puts pivotal_users.inspect
+    pivotal_user = pivotal_users.select{|user| user.id == pivotal_id.to_i}.first
+    # params[:person_mapping][:pivotal_id] = pivotal_id
+    params[:person_mapping][:pivotal_name] = pivotal_user.name
+    params[:person_mapping][:email] = pivotal_user.email
+    params[:person_mapping]
+  end
+
   # POST /person_mappings
   # POST /person_mappings.json
   def create
-    @person_mapping = PersonMapping.new(params[:person_mapping])
+    @person_mapping = PersonMapping.new(person_mapping_params)
 
     respond_to do |format|
       if @person_mapping.save
@@ -98,7 +122,7 @@ class PersonMappingsController < ApplicationController
     @person_mapping.destroy
 
     respond_to do |format|
-      format.html { redirect_to person_mappings_url }
+      format.html { redirect_to integration_person_mappings_url(@person_mapping.integration_id) }
       format.json { head :no_content }
     end
   end
