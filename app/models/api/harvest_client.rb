@@ -21,11 +21,12 @@ class Api::HarvestClient
   def create(task_name, project_id)
     task = Harvest::Task.new
     task.name = task_name
-    task = @client.task.create(task)
+    task = @client.tasks.create(task)
     assignment = Harvest::TaskAssignment.new
-    assignment.task = task.id
-    assignment.project = project_id
-    @client.task_assignment.create(assignment)
+    assignment.task_id = task.id
+    assignment.project_id = project_id
+    @client.task_assignments.create(assignment)
+    task
   end
 
   def start_task(task_id, harvest_project_id, user_id)
@@ -41,12 +42,29 @@ class Api::HarvestClient
 
   def stop_task(task_id, user_id)
     entries = find_entry(user_id, task_id)
-    @client.time.toggle() unless entries.empty?
+    @client.time.toggle(entries.first.id, user_id) unless entries.empty?
   end
 
   def find_entry(user_id, task_id)
+    puts "finding entry for user: #{user_id} and task_id: #{task_id}"
     entries = @client.time.all(Time.now, user_id).select do |entry|
-      entry.task_id == task_id && entry.ended_at.nil?
+      puts '------------'
+      puts entry.task_id
+      puts entry.ended_at
+      puts entry.task_id.to_i == task_id.to_i && entry.ended_at.blank?
+      puts '------------'
+      entry.task_id.to_i == task_id.to_i && entry.ended_at.blank?
+    end
+  end
+end
+
+module Harvest
+  module API
+    class Time < Base
+      def toggle(id, user=nil)
+        response = request(:get, credentials, "/daily/timer/#{id.to_i}", query: of_user_query(user))
+        Harvest::TimeEntry.parse(response.parsed_response).first
+      end
     end
   end
 end

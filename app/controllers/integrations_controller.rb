@@ -1,5 +1,5 @@
 class IntegrationsController < ApplicationController
-  before_filter :find_user
+  before_filter :find_user, except: :callback
   before_filter :fetch_projects, only: [:new , :edit]
 
   def find_user
@@ -56,7 +56,38 @@ class IntegrationsController < ApplicationController
     @pivotal_projects = pivotal_projects
   end
 
+  def harvest_api
+    @harvest_api ||= Api::HarvestClient.new(@integration.user)
+  end
+
+  def store(activity)
+    puts "#{params[:id]} - #{activity.instance_variables.inspect}"
+  end
+
+  def find_task_for_story(story_id)
+    @task_story ||= TaskStory.where(story_id: story_id).first
+    @task_story.try(:task_id)
+  end
+
   def callback
+    @integration = Integration.find(params[:id])
+    activity = ActivityParam.new(params)
+    case activity.type
+    when ActivityParam::CREATE_STORY
+      task = harvest_api.create(activity.task_name, @integration.harvest_project_id)
+      TaskStory.create(task_id: task.id, story_id: activity.story_id)
+    when ActivityParam::START_STORY
+      task_id = find_task_for_story(activity.story_id)
+      harvest_api.start_task(task_id, @integration.harvest_project_id, activity.user_id)
+    when ActivityParam::FINISH_STORY
+      task_id = find_task_for_story(activity.story_id)
+      harvest_api.stop_task(task_id, activity.user_id)
+    else
+      # do nothing just log it
+    end
+    # persist activity param incase we need it in the future
+    store(activity)
+    head :no_content
   end
 
   # GET /integrations
@@ -146,22 +177,6 @@ end
 
 
 #   def callback
-#     @mapping = ProjectMapping.find(params[:id])
-#     activity = ActivityParam.new(params)
-#     case activity.type
-#     when CREATE_STORY:
-#       harvest_api.create(activity.task_name, activity.project_id)
-#     when START_STORY:
-#       task_id = find_task_for_story(activity.story_id)
-#       harvest_api.start_task(task_id, @mapping.harvest_project_id, activity.user_id)
-#     when FINISH_STORY:
-#       task_id = find_task_for_story(activity.story_id)
-#       harvest_api.stop_task(task_id, activity.user_id)
-#     else
-#       # do nothing just log it
-#     end
-#     # persist activity param incase we need it in the future
-#     store(activity)
 #   end
 
 #   def store
@@ -211,7 +226,7 @@ class ActivityParam
   end
 
   def user_id
-    Person.where(pivotal_name: author).harvest_id
+    PersonMapping.where(pivotal_name: author).first.harvest_id
   end
 
   def task_name
