@@ -1,6 +1,7 @@
 class Api::PivotalClient
+  attr_accessor :token
   def initialize(user)
-    PivotalTracker::Client.token(user.pivotal_username, user.pivotal_password)
+    token = PivotalTracker::Client.token(user.pivotal_username, user.pivotal_password)
   end
 
   def all_projects

@@ -41,9 +41,9 @@ class UsersController < ApplicationController
   # POST /users.json
   def create
     @user = User.new(params[:user])
-
     respond_to do |format|
-      if @user.save
+      Api::PivotalClient.new(@user).token
+      if Api::HarvestClient.new(@user).client.account.who_am_i && @user.save
         format.html { redirect_to @user, notice: 'User was successfully created.' }
         format.json { render json: @user, status: :created, location: @user }
       else
@@ -51,15 +51,22 @@ class UsersController < ApplicationController
         format.json { render json: @user.errors, status: :unprocessable_entity }
       end
     end
+    rescue Harvest::AuthenticationFailed
+      @error = 'Wrong harvest authentication.'
+      render action: 'new'
+    rescue RestClient::Unauthorized
+      @error = 'Wrong pivotal authentication.'
+      render action: 'new'
   end
 
   # PUT /users/1
   # PUT /users/1.json
   def update
     @user = User.find(params[:id])
-
+    @user.assign_attributes(params[:user])
     respond_to do |format|
-      if @user.update_attributes(params[:user])
+      Api::PivotalClient.new(@user).token
+      if Api::HarvestClient.new(@user).client.account.who_am_i && @user.save
         format.html { redirect_to @user, notice: 'User was successfully updated.' }
         format.json { head :no_content }
       else
@@ -67,6 +74,12 @@ class UsersController < ApplicationController
         format.json { render json: @user.errors, status: :unprocessable_entity }
       end
     end
+    rescue Harvest::AuthenticationFailed
+      @error = 'Wrong harvest authentication.'
+      render action: 'edit'
+    rescue RestClient::Unauthorized
+      @error = 'Wrong pivotal authentication.'
+      render action: 'edit'
   end
 
   # DELETE /users/1
