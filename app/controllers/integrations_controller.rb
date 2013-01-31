@@ -1,53 +1,26 @@
 class IntegrationsController < ApplicationController
-  before_filter :find_user, except: :callback
+  CACHE_PERIODE = 3.minutes
+  before_filter :find_user, except: [:callback, :reload]
   before_filter :fetch_projects, only: [:new , :edit]
 
   def find_user
     @user = User.find(params[:user_id])
   end
 
-  class ProjectCache
-    attr_accessor :id, :name
-    def initialize project=nil
-      self.id = project.try(:id)
-      self.name = project.try(:name)
-    end
-    def to_hash
-      {id: self.id, name: self.name}
-    end
-    def self.new_from_hash hash
-      instance = new
-      instance.id = hash[:id]
-      instance.name = hash[:name]
-      instance
-    end
+  def reload
+    Rails.cache.clear
+    redirect_to root_url
   end
 
   def harvest_projects
-    projects = session[:harvest_projects]
-    unless projects
+    @harvest_projects ||= Rails.cache.fetch('harvest_projects', expires_in: CACHE_PERIODE) do
       projects = Api::HarvestClient.new(@user).all_projects
-      projects = projects.collect do |p|
-        ProjectCache.new(p)
-      end
-      session[:harvest_projects] = projects.map(&:to_hash)
-    end
-    session[:harvest_projects].collect do |hash|
-      ProjectCache.new_from_hash(hash)
     end
   end
 
   def pivotal_projects
-    projects = session[:pivotal_projects]
-    unless projects
+    @pivotal_projects ||= Rails.cache.fetch('pivotal_projects', expires_in: CACHE_PERIODE) do
       projects = Api::PivotalClient.new(@user).all_projects
-      projects = projects.collect do |p|
-        ProjectCache.new(p)
-      end
-      session[:pivotal_projects] = projects.map(&:to_hash)
-    end
-    session[:pivotal_projects].collect do |hash|
-      ProjectCache.new_from_hash(hash)
     end
   end
 

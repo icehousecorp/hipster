@@ -4,6 +4,9 @@ Pivotalharvested::Application.routes.draw do
     member do
       post 'callback'
     end
+    collection do
+      get 'reload'
+    end
     resources :person_mappings, except: [:show, :edit, :destroy]
   end
   resources :person_mappings, only: [:show, :edit, :destroy]
