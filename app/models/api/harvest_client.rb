@@ -35,8 +35,7 @@ class Api::HarvestClient
       entry = Harvest::TimeEntry.new
       entry.project_id = harvest_project_id
       entry.task_id = task_id
-      entry.user_id = user_id
-      @client.time.create(entry)
+      @client.time.create(entry, user_id)
     end
   end
 
@@ -46,13 +45,8 @@ class Api::HarvestClient
   end
 
   def find_entry(user_id, task_id)
-    puts "finding entry for user: #{user_id} and task_id: #{task_id}"
+    # puts "finding entry for user: #{user_id} and task_id: #{task_id}"
     entries = @client.time.all(Time.now, user_id).select do |entry|
-      puts '------------'
-      puts entry.task_id
-      puts entry.ended_at
-      puts entry.task_id.to_i == task_id.to_i && entry.ended_at.blank?
-      puts '------------'
       entry.task_id.to_i == task_id.to_i && entry.ended_at.blank?
     end
   end
@@ -63,6 +57,10 @@ module Harvest
     class Time < Base
       def toggle(id, user=nil)
         response = request(:get, credentials, "/daily/timer/#{id.to_i}", query: of_user_query(user))
+        Harvest::TimeEntry.parse(response.parsed_response).first
+      end
+      def create(entry, user=nil)
+        response = request(:post, credentials, '/daily/add', :body => entry.to_json, query: of_user_query(user))
         Harvest::TimeEntry.parse(response.parsed_response).first
       end
     end
