@@ -101,10 +101,26 @@ class IntegrationsController < ApplicationController
     @integration = Integration.find(params[:id])
   end
 
+  def harvest_project_name(pid)
+    p = harvest_projects.select{|project| project.id.to_i == pid.to_i}.first
+    p.name
+  end
+
+  def pivotal_project_name(pid)
+    p = pivotal_projects.select{|project| project.id.to_i == pid.to_i}.first
+    p.name
+  end
+
+  def integration_param
+    params[:integration][:harvest_project_name] = harvest_project_name(params[:integration][:harvest_project_id])
+    params[:integration][:pivotal_project_name] = pivotal_project_name(params[:integration][:pivotal_project_id])
+    params[:integration]
+  end
+
   # POST /integrations
   # POST /integrations.json
   def create
-    @integration = Integration.new(params[:integration])
+    @integration = Integration.new(integration_param)
 
     respond_to do |format|
       if @integration.save
@@ -122,7 +138,7 @@ class IntegrationsController < ApplicationController
     @integration = Integration.find(params[:id])
 
     respond_to do |format|
-      if @integration.update_attributes(params[:integration])
+      if @integration.update_attributes(integration_param)
         format.html { redirect_to @integration, notice: 'Integration was successfully updated.' }
         format.json { head :no_content }
       else

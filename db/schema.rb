@@ -15,10 +15,12 @@ ActiveRecord::Schema.define(:version => 20130131033731) do
 
   create_table "integrations", :force => true do |t|
     t.integer  "harvest_project_id"
+    t.string   "harvest_project_name"
     t.integer  "pivotal_project_id"
+    t.string   "pivotal_project_name"
     t.integer  "user_id"
-    t.datetime "created_at",         :null => false
-    t.datetime "updated_at",         :null => false
+    t.datetime "created_at",           :null => false
+    t.datetime "updated_at",           :null => false
   end
 
   add_index "integrations", ["user_id"], :name => "index_integrations_on_user_id"
