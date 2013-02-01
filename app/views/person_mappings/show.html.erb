@@ -2,22 +2,17 @@
 
 <p>
   <b>Harvest:</b>
-  <%= @person_mapping.harvest_id %>
+  <%= @person_mapping.harvest_info %>
 </p>
 
 <p>
-  <b>Email:</b>
-  <%= @person_mapping.email %>
-</p>
-
-<p>
-  <b>Pivotal name:</b>
-  <%= @person_mapping.pivotal_name %>
+  <b>Pivotal:</b>
+  <%= @person_mapping.pivotal_info %>
 </p>
 
 <p>
   <b>Integration:</b>
-  <%= @person_mapping.integration %>
+  <%= link_to @person_mapping.integration, user_integration_path( @person_mapping.integration.user, @person_mapping.integration )%>
 </p>
 
 

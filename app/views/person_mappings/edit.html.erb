@@ -3,4 +3,4 @@
 <%= render 'form' %>
 
 <%= link_to 'Show', @person_mapping %> |
-<%= link_to 'Back', person_mappings_path %>
+<%= link_to 'Back', integration_person_mappings_path(@person_mapping.integration) %>
