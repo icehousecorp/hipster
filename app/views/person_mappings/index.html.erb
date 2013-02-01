@@ -3,8 +3,7 @@
 <table>
   <tr>
     <th>Harvest</th>
-    <th>Email</th>
-    <th>Pivotal name</th>
+    <th>Pivotal</th>
     <th>Integration</th>
     <th></th>
     <th></th>
@@ -13,9 +12,8 @@
 
 <% @person_mappings.each do |person_mapping| %>
   <tr>
-    <td><%= person_mapping.harvest_id %></td>
-    <td><%= person_mapping.email %></td>
-    <td><%= person_mapping.pivotal_name %></td>
+    <td><%= person_mapping.harvest_info %></td>
+    <td><%= person_mapping.pivotal_info %></td>
     <td><%= person_mapping.integration %></td>
     <td><%= link_to 'Show', person_mapping %></td>
     <td><%= link_to 'Edit', edit_person_mapping_path(person_mapping) %></td>
