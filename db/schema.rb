@@ -27,7 +27,10 @@ ActiveRecord::Schema.define(:version => 20130131033731) do
 
   create_table "person_mappings", :force => true do |t|
     t.integer  "harvest_id"
-    t.string   "email"
+    t.string   "harvest_email"
+    t.string   "harvest_name"
+    t.integer  "pivotal_id"
+    t.string   "pivotal_email"
     t.string   "pivotal_name"
     t.integer  "integration_id"
     t.datetime "created_at",     :null => false
@@ -46,7 +49,7 @@ ActiveRecord::Schema.define(:version => 20130131033731) do
   create_table "users", :force => true do |t|
     t.integer  "pivotal_id"
     t.string   "pivotal_username"
-    t.string   "pivotal_password"
+    t.string   "pivotal_token"
     t.string   "harvest_subdomain"
     t.integer  "harvest_id"
     t.string   "harvest_username"

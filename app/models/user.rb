@@ -1,5 +1,8 @@
 class User < ActiveRecord::Base
-  attr_accessible :harvest_id, :harvest_password, :harvest_subdomain, :harvest_username, :pivotal_id, :pivotal_password, :pivotal_username
+  attr_accessible :harvest_id, :harvest_password, :harvest_subdomain, :harvest_username
+
+  attr_accessor :pivotal_password
+  attr_accessible :pivotal_id, :pivotal_password, :pivotal_username, :pivotal_token
 
   validates(:harvest_password, :presence => true)
   validates(:harvest_subdomain, :presence => true)

@@ -41,9 +41,13 @@ class UsersController < ApplicationController
   # POST /users.json
   def create
     @user = User.new(params[:user])
+    @user.pivotal_token =  Api::PivotalClient.new(@user).token
+
+    puts "receive token of class: #{@user.pivotal_token.class}"
+    puts "token detail is: #{@user.pivotal_token.inspect}"
+
     respond_to do |format|
-      Api::PivotalClient.new(@user).token
-      if Api::HarvestClient.new(@user).client.account.who_am_i && @user.save
+      if @user.valid? && Api::HarvestClient.new(@user).client.account.who_am_i && @user.save
         format.html { redirect_to @user, notice: 'User was successfully created.' }
         format.json { render json: @user, status: :created, location: @user }
       else
@@ -64,9 +68,9 @@ class UsersController < ApplicationController
   def update
     @user = User.find(params[:id])
     @user.assign_attributes(params[:user])
+    @user.pivotal_token =  Api::PivotalClient.new(@user).token
     respond_to do |format|
-      Api::PivotalClient.new(@user).token
-      if Api::HarvestClient.new(@user).client.account.who_am_i && @user.save
+      if @user.valid? && Api::HarvestClient.new(@user).client.account.who_am_i && @user.save
         format.html { redirect_to @user, notice: 'User was successfully updated.' }
         format.json { head :no_content }
       else

@@ -22,13 +22,13 @@ class PersonMappingsController < ApplicationController
   def find_all_pivotal_users
     Rails.cache.fetch("pivotal_users_#{@integration.id}", expires_in: CACHE_PERIODE) do
       api = Api::PivotalClient.new @integration.user
-      api.all_users(@integration.harvest_project_id)
+      api.all_users(@integration.pivotal_project_id)
     end
   end
 
   def find_single_pivotal_users
     @pivotal_single_users ||= find_all_pivotal_users
-    mapped_email = @integration.person_mappings.map(&:email)
+    mapped_email = @integration.person_mappings.map(&:pivotal_email)
     @pivotal_single_users.reject!{|user| mapped_email.include?(user.email) }
   end
 
@@ -70,16 +70,23 @@ class PersonMappingsController < ApplicationController
   # GET /person_mappings/1/edit
   def edit
     @person_mapping = PersonMapping.find(params[:id])
+    @integration = @person_mapping.integration
+    find_single_harvest_users
+    find_single_pivotal_users
   end
 
   def person_mapping_params
     pivotal_id = params[:person_mapping].delete(:pivotal_name)
     pivotal_users = find_all_pivotal_users
-    puts pivotal_users.inspect
     pivotal_user = pivotal_users.select{|user| user.id == pivotal_id.to_i}.first
-    # params[:person_mapping][:pivotal_id] = pivotal_id
-    params[:person_mapping][:pivotal_name] = pivotal_user.name
-    params[:person_mapping][:email] = pivotal_user.email
+    params[:person_mapping][:pivotal_name] = pivotal_user.try(:name)
+    params[:person_mapping][:pivotal_email] = pivotal_user.try(:email)
+
+    harvest_users = find_all_harvest_users
+    harvest_id = params[:person_mapping][:harvest_id]
+    harvest_user = harvest_users.select{|user| user.id.to_i == harvest_id.to_i}.first
+    params[:person_mapping][:harvest_name] = "#{harvest_user.try(:first_name)} #{harvest_user.try(:last_name)}"
+    params[:person_mapping][:harvest_email] = harvest_user.try(:email)
     params[:person_mapping]
   end
 
@@ -93,6 +100,8 @@ class PersonMappingsController < ApplicationController
         format.html { redirect_to @person_mapping, notice: 'Person mapping was successfully created.' }
         format.json { render json: @person_mapping, status: :created, location: @person_mapping }
       else
+        find_single_harvest_users
+        find_single_pivotal_users
         format.html { render action: "new" }
         format.json { render json: @person_mapping.errors, status: :unprocessable_entity }
       end
@@ -105,10 +114,14 @@ class PersonMappingsController < ApplicationController
     @person_mapping = PersonMapping.find(params[:id])
 
     respond_to do |format|
-      if @person_mapping.update_attributes(params[:person_mapping])
+      if @person_mapping.update_attributes(person_mapping_params)
         format.html { redirect_to @person_mapping, notice: 'Person mapping was successfully updated.' }
         format.json { head :no_content }
       else
+        @integration = @person_mapping.integration
+        find_single_harvest_users
+        find_single_pivotal_users
+
         format.html { render action: "edit" }
         format.json { render json: @person_mapping.errors, status: :unprocessable_entity }
       end

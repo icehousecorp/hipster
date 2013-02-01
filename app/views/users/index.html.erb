@@ -2,11 +2,9 @@
 
 <table>
   <tr>
-    <th>Pivotal</th>
     <th>Pivotal username</th>
-    <th>Pivotal password</th>
+    <th>Pivotal token</th>
     <th>Harvest subdomain</th>
-    <th>Harvest</th>
     <th>Harvest username</th>
     <th>Harvest password</th>
     <th></th>
@@ -16,11 +14,9 @@
 
 <% @users.each do |user| %>
   <tr>
-    <td><%= user.pivotal_id %></td>
     <td><%= user.pivotal_username %></td>
-    <td><%= user.pivotal_password %></td>
+    <td><%= user.pivotal_token %></td>
     <td><%= user.harvest_subdomain %></td>
-    <td><%= user.harvest_id %></td>
     <td><%= user.harvest_username %></td>
     <td><%= user.harvest_password %></td>
     <td><%= link_to 'Show', user %></td>
