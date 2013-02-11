@@ -12,10 +12,13 @@ Pivotalharvested::Application.routes.draw do
   resources :person_mappings, only: [:show, :edit, :destroy]
 
   root to: "home#index"
-  resources :users do
+  resources :users, except: [:new, :index, :create] do
     resources :integrations
   end
 
+  match 'logout' => 'home#logout'
+  match 'auth/google_oauth2/callback' => 'home#google_oauth2'
+  match 'auth/harvest/callback' => 'home#harvest'
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

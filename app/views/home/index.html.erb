@@ -2,7 +2,8 @@
 
 <h2>Step by step instruction:</h2>
 <ul>
-<li>Insert both Pivotal and Harvest credential in <%= link_to "User Page", new_user_path %>, or choose a user from <%= link_to "Manage User", users_path %></li>
+<li>Login with your <%= link_to 'Google account', '/auth/google_oauth2' %></li>
+<li>Insert both Pivotal and Harvest credential</li>
 <li>Manage integration between a project in pivotal and harvest by clicking "User Integration" from user profile page.</li>
 <li>Copy the integration callback URL from the User Integration page created on previous step</li>
 <li>Go to your pivotal project, go to project integration and enter the url as web hook url</li>

@@ -1,18 +1,24 @@
 class User < ActiveRecord::Base
-  attr_accessible :harvest_id, :harvest_password, :harvest_subdomain, :harvest_username
+  attr_accessible :username
+  attr_accessible :harvest_id, :harvest_subdomain, :harvest_identifier, :harvest_secret
+  attr_accessible :pivotal_id, :pivotal_token
 
-  attr_accessor :pivotal_password
-  attr_accessible :pivotal_id, :pivotal_password, :pivotal_username, :pivotal_token
+  validates(:username, :presence => true)
 
-  validates(:harvest_password, :presence => true)
-  validates(:harvest_subdomain, :presence => true)
+  has_many :identities
+  # validates(:harvest_password, :presence => true)
+  # validates(:harvest_subdomain, :presence => true)
   # validates(:harvest_id, :presence => true)
-  validates(:harvest_username, :presence => true)
+  # validates(:harvest_username, :presence => true)
   # validates(:pivotal_id, :presence => true)
-  validates(:pivotal_username, :presence => true)
-  validates(:pivotal_password, :presence => true)
+  # validates(:pivotal_username, :presence => true)
+  # validates(:pivotal_password, :presence => true)
 
   def to_s
-    "#{harvest_username} - #{pivotal_username}"
+    "#{username}"
+  end
+
+  def self.from_googleauth(auth)
+    create(username: auth['info']['name'])
   end
 end
