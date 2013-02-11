@@ -4,13 +4,19 @@
   <%= f.error_notification %>
 
   <div class="form-inputs">
-    <%= f.input :pivotal_id, as: :hidden%>
-    <%= f.input :pivotal_username %>
-    <%= f.input :pivotal_password %>
+    <%= f.input :username %>
+    <%= f.input :pivotal_token %>
+    <p>
+    	Get it from your pivotal tracker <%= link_to 'profile page', 'https://www.pivotaltracker.com/profile', {target: '_blank'} %>
+	</p>
+
+	<p>
+		Create oauth token for hipster at Account Settings -> Oauth Tokens
+		Please use <code><%= root_url %></code> as redirect url.
+	</p>    
     <%= f.input :harvest_subdomain %>
-    <%= f.input :harvest_id, as: :hidden %>
-    <%= f.input :harvest_username %>
-    <%= f.input :harvest_password %>
+    <%= f.input :harvest_identifier %>
+    <%= f.input :harvest_secret %>
   </div>
 
   <div class="form-actions">

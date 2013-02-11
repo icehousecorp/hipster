@@ -1,8 +1,8 @@
 <p id="notice"><%= notice %></p>
 
 <p>
-  <b>Pivotal username:</b>
-  <%= @user.pivotal_username %>
+  <b>Name:</b>
+  <%= @user.username %>
 </p>
 
 <p>
@@ -11,20 +11,17 @@
 </p>
 
 <p>
-  <b>Harvest subdomain:</b>
+  <b>Harvest Subdomain:</b>
   <%= @user.harvest_subdomain %>
 </p>
-
 <p>
-  <b>Harvest username:</b>
-  <%= @user.harvest_username %>
+  <b>Harvest Identifier:</b>
+  <%= @user.harvest_identifier %>
 </p>
-
 <p>
-  <b>Harvest password:</b>
-  <%= @user.harvest_password %>
+  <b>Harvest Secret:</b>
+  <%= @user.harvest_secret %>
 </p>
 
 <%= link_to 'Manage Project Integration', user_integrations_path(@user) %> |
-<%= link_to 'Edit', edit_user_path(@user) %> |
-<%= link_to 'Back', users_path %>
+<%= link_to 'Edit', edit_user_path(@user) %>
