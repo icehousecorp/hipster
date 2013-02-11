@@ -10,7 +10,9 @@
 
 <div><%= link_to "Home", root_url %></div>
 <div><%= link_to 'Reload Data', reload_integrations_path %></div>
-
+<% if session[:user_id] %>
+<div><%= link_to "Logout", '/logout' %></div>
+<% end %>
 
 <%= yield %>
 

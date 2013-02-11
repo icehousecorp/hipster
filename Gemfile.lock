@@ -84,6 +84,9 @@ GEM
     omniauth (1.1.1)
       hashie (~> 1.2)
       rack
+    omniauth-google-oauth2 (0.1.13)
+      omniauth (~> 1.0)
+      omniauth-oauth2
     omniauth-harvest (0.1.0)
       omniauth-oauth2 (~> 1.0.0)
     omniauth-oauth2 (1.0.3)
@@ -159,6 +162,7 @@ DEPENDENCIES
   coffee-rails (~> 3.2.1)
   harvested
   jquery-rails
+  omniauth-google-oauth2
   omniauth-harvest
   pg
   pivotal-tracker

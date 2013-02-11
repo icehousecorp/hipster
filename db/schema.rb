@@ -11,7 +11,17 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130131033731) do
+ActiveRecord::Schema.define(:version => 20130207080849) do
+
+  create_table "identities", :force => true do |t|
+    t.string   "provider"
+    t.string   "uid"
+    t.integer  "user_id"
+    t.datetime "created_at", :null => false
+    t.datetime "updated_at", :null => false
+  end
+
+  add_index "identities", ["user_id"], :name => "index_identities_on_user_id"
 
   create_table "integrations", :force => true do |t|
     t.integer  "harvest_project_id"
@@ -47,15 +57,17 @@ ActiveRecord::Schema.define(:version => 20130131033731) do
   end
 
   create_table "users", :force => true do |t|
+    t.string   "username"
     t.integer  "pivotal_id"
-    t.string   "pivotal_username"
     t.string   "pivotal_token"
     t.string   "harvest_subdomain"
+    t.string   "harvest_identifier"
+    t.string   "harvest_secret"
     t.integer  "harvest_id"
-    t.string   "harvest_username"
-    t.string   "harvest_password"
-    t.datetime "created_at",        :null => false
-    t.datetime "updated_at",        :null => false
+    t.string   "harvest_token"
+    t.string   "harvest_refresh_token"
+    t.datetime "created_at",            :null => false
+    t.datetime "updated_at",            :null => false
   end
 
 end

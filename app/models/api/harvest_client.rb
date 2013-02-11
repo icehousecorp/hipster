@@ -1,7 +1,7 @@
 class Api::HarvestClient
   attr_accessor :client
   def initialize(user)
-    @client = Harvest.client(user.harvest_subdomain, user.harvest_username, user.harvest_password)
+    @client = Harvest.client(user.harvest_subdomain, "user.harvest_username", "user.harvest_password")
   end
 
   def all_projects

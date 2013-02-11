@@ -1,19 +1,9 @@
 class UsersController < ApplicationController
-  # GET /users
-  # GET /users.json
-  def index
-    @users = User.all
-
-    respond_to do |format|
-      format.html # index.html.erb
-      format.json { render json: @users }
-    end
-  end
 
   # GET /users/1
   # GET /users/1.json
   def show
-    @user = User.find(params[:id])
+    @user = User.find(session[:user_id]|| params[:id])
 
     respond_to do |format|
       format.html # show.html.erb
@@ -21,75 +11,43 @@ class UsersController < ApplicationController
     end
   end
 
-  # GET /users/new
-  # GET /users/new.json
-  def new
-    @user = User.new
-
-    respond_to do |format|
-      format.html # new.html.erb
-      format.json { render json: @user }
-    end
-  end
-
   # GET /users/1/edit
   def edit
-    @user = User.find(params[:id])
+    @user = User.find(session[:user_id]|| params[:id])
   end
 
-  # POST /users
-  # POST /users.json
-  def create
-    @user = User.new(params[:user])
-    @user.pivotal_token =  Api::PivotalClient.new(@user).token
-
-    puts "receive token of class: #{@user.pivotal_token.class}"
-    puts "token detail is: #{@user.pivotal_token.inspect}"
-
-    respond_to do |format|
-      if @user.valid? && Api::HarvestClient.new(@user).client.account.who_am_i && @user.save
-        format.html { redirect_to @user, notice: 'User was successfully created.' }
-        format.json { render json: @user, status: :created, location: @user }
-      else
-        format.html { render action: "new" }
-        format.json { render json: @user.errors, status: :unprocessable_entity }
-      end
-    end
-    rescue Harvest::AuthenticationFailed
-      @error = 'Wrong harvest authentication.'
-      render action: 'new'
-    rescue RestClient::Unauthorized
-      @error = 'Wrong pivotal authentication.'
-      render action: 'new'
+  def validate_pivotal_token
+    return true unless @user.pivotal_token_changed?
+    client = Api::PivotalClient.new(@user)
+    client.all_projects
+    rescue
+      nil
   end
 
   # PUT /users/1
   # PUT /users/1.json
   def update
-    @user = User.find(params[:id])
+    @user = User.find(session[:user_id]|| params[:id])
     @user.assign_attributes(params[:user])
-    @user.pivotal_token =  Api::PivotalClient.new(@user).token
-    respond_to do |format|
-      if @user.valid? && Api::HarvestClient.new(@user).client.account.who_am_i && @user.save
-        format.html { redirect_to @user, notice: 'User was successfully updated.' }
-        format.json { head :no_content }
+    need_harvest_login = @user.harvest_subdomain_changed?
+    if validate_pivotal_token() && @user.save
+      puts "user is valid"
+      puts need_harvest_login
+      if need_harvest_login
+        redirect_to '/auth/harvest'
       else
-        format.html { render action: "edit" }
-        format.json { render json: @user.errors, status: :unprocessable_entity }
+        redirect_to @user, notice: 'User was successfully updated.'
       end
+    else
+      @error = 'Wrong pivotal token.' if @user.pivotal_token_changed?
+      render action: "edit"
     end
-    rescue Harvest::AuthenticationFailed
-      @error = 'Wrong harvest authentication.'
-      render action: 'edit'
-    rescue RestClient::Unauthorized
-      @error = 'Wrong pivotal authentication.'
-      render action: 'edit'
   end
 
   # DELETE /users/1
   # DELETE /users/1.json
   def destroy
-    @user = User.find(params[:id])
+    @user = User.find(session[:user_id]|| params[:id])
     @user.destroy
 
     respond_to do |format|
