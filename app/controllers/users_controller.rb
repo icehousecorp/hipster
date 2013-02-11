@@ -29,12 +29,12 @@ class UsersController < ApplicationController
   def update
     @user = User.find(session[:user_id]|| params[:id])
     @user.assign_attributes(params[:user])
-    need_harvest_login = @user.harvest_subdomain_changed?
+    need_harvest_login = @user.harvest_subdomain_changed? || @user.harvest_identifier_changed? || @user.harvest_secret_changed?
     if validate_pivotal_token() && @user.save
       puts "user is valid"
       puts need_harvest_login
       if need_harvest_login
-        redirect_to '/auth/harvest'
+        redirect_to Api::HarvestClient.new(@user).authorize_url(root_url)
       else
         redirect_to @user, notice: 'User was successfully updated.'
       end

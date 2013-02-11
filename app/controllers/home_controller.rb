@@ -1,6 +1,16 @@
 class HomeController < ApplicationController
   def index
-  	redirect_to user_path(session[:user_id]) if session[:user_id]
+    if current_user
+      if params[:code]
+        # raise params.inspect
+        token = Api::HarvestClient.new(current_user).token(params[:code], root_url)
+        current_user.harvest_token = token.token
+        current_user.harvest_refresh_token = token.refresh_token
+        current_user.save
+        flash[:notice] = 'harvest setting verified'
+      end
+      redirect_to user_path(current_user)
+    end
   end
 
   def logout
@@ -8,22 +18,12 @@ class HomeController < ApplicationController
   	redirect_to root_url
   end
 
-  def harvest
-    auth_hash = env['omniauth.auth'].to_hash
-	# render text: env['omniauth.auth'].to_hash.inspect
-    if session[:user_id]
-      user = User.find(session[:user_id])
-      user.harvest_token = auth_hash['credentials']['token']
-      user.save
-      redirect_to user, notice: 'success updating harvest credentials'
-    end
-  end
-
   def google_oauth2
   	auth_hash = request.env['omniauth.auth'].to_hash
   	identity = Identity.where(provider: 'google_oauth2', uid: auth_hash['uid']).first
   	if identity && identity.user_id
-	  	redirect_to user_path(identity.user_id)
+      redirect_to user_integrations_path(identity.user_id)
+	  	# redirect_to user_path(identity.user_id)
   	else
   		user = User.from_googleauth(auth_hash)
   		identity = Identity.create(provider: 'google_oauth2', uid: auth_hash['uid'], user_id: user.id)

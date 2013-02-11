@@ -122,13 +122,11 @@ class IntegrationsController < ApplicationController
   def create
     @integration = Integration.new(integration_param)
 
-    respond_to do |format|
-      if @integration.save
-        format.html { redirect_to user_integration_path(@user, @integration), notice: 'Integration was successfully created.' }
-      else
-        fetch_projects
-        format.html { render action: "new" }
-      end
+    if @integration.save
+      redirect_to user_integration_path(@user, @integration), notice: 'Integration was successfully created.'
+    else
+      fetch_projects
+      render action: "new"
     end
   end
 
@@ -137,15 +135,11 @@ class IntegrationsController < ApplicationController
   def update
     @integration = Integration.find(params[:id])
 
-    respond_to do |format|
-      if @integration.update_attributes(integration_param)
-        format.html { redirect_to @integration, notice: 'Integration was successfully updated.' }
-        format.json { head :no_content }
-      else
-        fetch_projects
-        format.html { render action: "edit" }
-        format.json { render json: @integration.errors, status: :unprocessable_entity }
-      end
+    if @integration.update_attributes(integration_param)
+      redirect_to user_integration_path(@user, @integration), notice: 'Integration was successfully updated.'
+    else
+      fetch_projects
+      render action: "edit"
     end
   end
 

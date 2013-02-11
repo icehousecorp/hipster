@@ -15,7 +15,7 @@ class User < ActiveRecord::Base
   # validates(:pivotal_password, :presence => true)
 
   def to_s
-    "#{harvest_username}"
+    "#{username}"
   end
 
   def self.from_googleauth(auth)
