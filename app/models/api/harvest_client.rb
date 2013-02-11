@@ -2,7 +2,7 @@ class Api::HarvestClient
   attr_accessor :client, :user
   def initialize(user)
     @user = user
-    @client = Harvest.token_client(user.harvest_subdomain, user.harvest_token)
+    @client = Harvest.token_client(user.harvest_subdomain, user.harvest_token) if user.harvest_token
   end
 
   def authorize_url(redirect_uri)
