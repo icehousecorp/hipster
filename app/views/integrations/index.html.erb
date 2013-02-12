@@ -1,27 +1,29 @@
-<h1>Listing integrations</h1>
+<div class="row-fluid">
+  <h2>Integrations</h2>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Harvest project</th>
+        <th>Pivotal project</th>
+        <th>User</th>
+        <th></th>
+        <th></th>
+        <th></th>
+      </tr>
+    </thead>
 
-<table>
-  <tr>
-    <th>Harvest project</th>
-    <th>Pivotal project</th>
-    <th>User</th>
-    <th></th>
-    <th></th>
-    <th></th>
-  </tr>
-
-<% @integrations.each do |integration| %>
-  <tr>
-    <td><%= integration.harvest_project_id %> - <%= integration.harvest_project_name %></td>
-    <td><%= integration.pivotal_project_id %> - <%= integration.pivotal_project_name %></td>
-    <td><%= integration.user %></td>
-    <td><%= link_to 'Show', user_integration_path(@user.id, integration.id) %></td>
-    <td><%= link_to 'Edit', edit_user_integration_path(@user.id, integration.id) %></td>
-    <td><%= link_to 'Destroy', user_integration_path(@user.id, integration.id), method: :delete, data: { confirm: 'Are you sure?' } %></td>
-  </tr>
-<% end %>
-</table>
-
-<br />
-
-<%= link_to 'New Integration', new_user_integration_path(@user) %>
+  <% @integrations.each do |integration| %>
+      <tbody>
+        <tr>
+        <td><%= integration.harvest_project_id %> - <%= integration.harvest_project_name %></td>
+        <td><%= integration.pivotal_project_id %> - <%= integration.pivotal_project_name %></td>
+        <td><%= integration.user %></td>
+        <td><%= link_to 'Show', user_integration_path(@user.id, integration.id) %></td>
+        <td><%= link_to 'Edit', edit_user_integration_path(@user.id, integration.id) %></td>
+        <td><%= link_to 'Destroy', user_integration_path(@user.id, integration.id), method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+      </tbody>
+  <% end %>
+  </table>
+  <%= link_to 'New Integration', new_user_integration_path(@user), class: 'btn' %>
+</div>

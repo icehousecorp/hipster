@@ -1,27 +1,40 @@
-<p id="notice"><%= notice %></p>
+<div class="row-fluid">
+  <h2>Profile</h2>
+  <% if notice %>
+  <div class="alert alert-success">
+    <%= notice %>
+    <a class="close" data-dismiss="alert" href="#">&times;</a>
+  </div>
+  <% end %>
 
-<p>
-  <b>Name:</b>
-  <%= @user.username %>
-</p>
+  <div class="detail">
+    <p>
+      <b>Name</b>
+      : <%= @user.username %>
+    </p>
 
-<p>
-  <b>Pivotal token:</b>
-  <%= @user.pivotal_token %>
-</p>
+    <p>
+      <b>Pivotal token</b>
+      : <%= @user.pivotal_token %>
+    </p>
 
-<p>
-  <b>Harvest Subdomain:</b>
-  <%= @user.harvest_subdomain %>
-</p>
-<p>
-  <b>Harvest Identifier:</b>
-  <%= @user.harvest_identifier %>
-</p>
-<p>
-  <b>Harvest Secret:</b>
-  <%= @user.harvest_secret %>
-</p>
+    <p>
+      <b>Harvest Subdomain</b>
+      : <%= @user.harvest_subdomain %>
+    </p>
+    <p>
+      <b>Harvest Identifier</b>
+      : <%= @user.harvest_identifier %>
+    </p>
+    <p>
+      <b>Harvest Secret</b>
+      : <%= @user.harvest_secret %>
+    </p>
+  </div>
 
-<%= link_to 'Manage Project Integration', user_integrations_path(@user) %> |
-<%= link_to 'Edit', edit_user_path(@user) %>
+  <div class="form-submit">
+    <%= link_to 'Manage Project Integration', user_integrations_path(@user), class: 'btn' %>
+    <%= link_to 'Edit', edit_user_path(@user), class: 'btn' %>
+  </div>
+
+</div>
