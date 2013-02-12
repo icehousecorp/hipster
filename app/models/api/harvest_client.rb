@@ -19,6 +19,13 @@ class Api::HarvestClient
     OAuth2::Client.new(user.harvest_identifier, user.harvest_secret, options)
   end
 
+  def refresh_token!
+    token = OAuth2::AccessToken.new(oauth_client, user.harvest_token, refresh_token: user.harvest_refresh_token).refresh!
+    user.harvest_token = token.token
+    user.harvest_refresh_token = token.refresh_token
+    user.save
+  end
+
   def token(code, redirect_uri)
     token_params = {
       :code => code,

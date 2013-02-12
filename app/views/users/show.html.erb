@@ -23,5 +23,6 @@
   <%= @user.harvest_secret %>
 </p>
 
+<%= link_to 'Confirm Harvest Connection', confirm_harvest_user_path(current_user) %> | 
 <%= link_to 'Manage Project Integration', user_integrations_path(@user) %> |
 <%= link_to 'Edit', edit_user_path(@user) %>
