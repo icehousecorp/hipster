@@ -9,7 +9,7 @@ class HomeController < ApplicationController
         current_user.save
         flash[:notice] = 'harvest setting verified'
       end
-      redirect_to user_path(current_user)
+      redirect_to user_integrations_path(current_user)
     end
   end
 
