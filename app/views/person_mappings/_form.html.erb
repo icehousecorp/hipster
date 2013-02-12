@@ -8,7 +8,13 @@
     <%= f.association :integration, as: :hidden %>
   </div>
 
-  <div class="form-actions">
+  <div class="form-submit">
     <%= f.button :submit %>
+
+    <% if @person_mapping.id %>
+      <%= link_to 'Cancel', integration_person_mappings_path(@person_mapping.integration), class: 'btn' %>
+    <% else %>
+      <%= link_to 'Cancel', integration_person_mappings_path(@integration), class: 'btn' %>
+    <% end %>
   </div>
 <% end %>

@@ -1,25 +1,27 @@
-<p id="notice"><%= @error %></p>
+<% if @error %>
+  <div class="alert alert-success">
+    <%= @error %>
+    <a class="close" data-dismiss="alert" href="#">&times;</a>
+  </div>
+<% end %>
 
 <%= simple_form_for(@user) do |f| %>
   <%= f.error_notification %>
-
   <div class="form-inputs">
     <%= f.input :username %>
     <%= f.input :pivotal_token %>
-    <p>
-    	Get it from your pivotal tracker <%= link_to 'profile page', 'https://www.pivotaltracker.com/profile', {target: '_blank'} %>
-	</p>
-
-	<p>
-		Create oauth token for hipster at Account Settings -> Oauth Tokens
-		Please use <code><%= root_url %></code> as redirect url.
-	</p>    
+    <p class='small'>
+  	 Get it from your pivotal tracker <%= link_to 'profile page', 'https://www.pivotaltracker.com/profile', {target: '_blank'} %><br>
+	   Create oauth token for hipster at Account Settings -> Oauth Tokens
+	   Please use <code><%= root_url %></code> as redirect url.
+    </p>
     <%= f.input :harvest_subdomain %>
     <%= f.input :harvest_identifier %>
     <%= f.input :harvest_secret %>
   </div>
 
-  <div class="form-actions">
+  <div class="form-submit">
     <%= f.button :submit %>
+    <%= link_to 'Cancel', @user, class: 'btn' %>
   </div>
 <% end %>

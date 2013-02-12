@@ -6,8 +6,13 @@
     <%= f.input :pivotal_project_id, as: :select, collection: @pivotal_projects %>
     <%= f.association :user, as: :hidden %>
   </div>
-
-  <div class="form-actions">
+  <div class="form-submit">
     <%= f.button :submit %>
+
+    <% if @integration.id %>
+      <%= link_to 'Cancel', user_integration_path(@user.id, @integration.id), class: 'btn' %>
+    <% else %>
+      <%= link_to 'Cancel', user_integrations_path(@user), class: 'btn' %>
+    <% end %>
   </div>
 <% end %>
