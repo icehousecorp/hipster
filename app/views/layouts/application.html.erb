@@ -8,14 +8,22 @@
 </head>
 <body>
 
-<div><%= link_to "Home", root_url %></div>
-<div><%= link_to 'Reload Data', reload_integrations_path %></div>
-<% if current_user %>
-	<div><%= link_to "Profile", current_user %></div>
-	<div><%= link_to "Logout", '/logout' %></div>
-<% end %>
-
-<%= yield %>
+  <div class="container-narrow">
+    <div class="masthead">
+      <ul class="nav nav-pills pull-right">
+        <li><%= link_to "Home", root_url, class: 'btn' %></li>
+      <% if current_user %>
+        <li><%= link_to 'Reload Data', reload_integrations_path, class: 'btn' %></li>
+        <li><%= link_to "Profile", current_user, class: 'btn' %></li>
+        <li><%= link_to "Logout", '/logout', class: 'btn' %></li>
+      <% else %>
+        <li><%= link_to 'Login', '/auth/google_oauth2', class: 'btn' %></li>
+      <% end %>
+      </ul>
+      <h3>Hipsterapp</h3>
+    </div>
+    <%= yield %>
+  </div>
 
 </body>
 </html>
