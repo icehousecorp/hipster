@@ -33,6 +33,7 @@
   </div>
 
   <div class="form-submit">
+    <%= link_to 'Confirm Harvest Connection', confirm_harvest_user_path(current_user), class: 'btn' %>
     <%= link_to 'Manage Project Integration', user_integrations_path(@user), class: 'btn' %>
     <%= link_to 'Edit', edit_user_path(@user), class: 'btn' %>
   </div>

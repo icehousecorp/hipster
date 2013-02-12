@@ -13,6 +13,9 @@ Pivotalharvested::Application.routes.draw do
 
   root to: "home#index"
   resources :users, except: [:new, :index, :create] do
+    member do
+      get 'confirm_harvest'
+    end
     resources :integrations
   end
 

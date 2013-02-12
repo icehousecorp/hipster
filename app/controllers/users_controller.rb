@@ -24,6 +24,10 @@ class UsersController < ApplicationController
       nil
   end
 
+  def confirm_harvest
+    redirect_to Api::HarvestClient.new(current_user).authorize_url(root_url)
+  end
+
   # PUT /users/1
   # PUT /users/1.json
   def update

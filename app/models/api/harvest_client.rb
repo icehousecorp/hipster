@@ -19,6 +19,13 @@ class Api::HarvestClient
     OAuth2::Client.new(user.harvest_identifier, user.harvest_secret, options)
   end
 
+  def refresh_token!
+    token = OAuth2::AccessToken.new(oauth_client, user.harvest_token, refresh_token: user.harvest_refresh_token).refresh!
+    user.harvest_token = token.token
+    user.harvest_refresh_token = token.refresh_token
+    user.save
+  end
+
   def token(code, redirect_uri)
     token_params = {
       :code => code,
@@ -30,8 +37,21 @@ class Api::HarvestClient
     oauth_client.auth_code.get_token(code,{:redirect_uri => redirect_uri})
   end
 
+  def should_retry?
+    (@retry_count || 0) < 1
+  end
+
+  def increase_retry_counter
+    @retry_count ||= 0
+    @retry_count += 1
+  end
+
   def all_projects
     @client.projects.all
+  rescue Harvest::AuthenticationFailed
+    refresh_token!
+    all_projects if should_retry?
+    increase_retry_counter
   end
 
   def all_users(project_id)
@@ -42,6 +62,10 @@ class Api::HarvestClient
       assigned_users << users.select {|u| u.id == a.user_id}.first
     end
     assigned_users
+  rescue Harvest::AuthenticationFailed
+    refresh_token!
+    all_users(project_id) if should_retry?
+    increase_retry_counter
   end
 
   def create(task_name, project_id)
@@ -53,6 +77,10 @@ class Api::HarvestClient
     assignment.project_id = project_id
     @client.task_assignments.create(assignment)
     task
+  rescue Harvest::AuthenticationFailed
+    refresh_token!
+    create(task_name, project_id) if should_retry?
+    increase_retry_counter
   end
 
   def start_task(task_id, harvest_project_id, user_id)
@@ -64,11 +92,19 @@ class Api::HarvestClient
       puts "create time with task_id: #{task_id} and user: #{user_id}"
       @client.time.create(entry, user_id)
     end
+  rescue Harvest::AuthenticationFailed
+    refresh_token!
+    start_task(task_id, harvest_project_id, user_id) if should_retry?
+    increase_retry_counter
   end
 
   def stop_task(task_id, user_id)
     entries = find_entry(user_id, task_id)
     @client.time.toggle(entries.first.id, user_id) unless entries.empty?
+  rescue Harvest::AuthenticationFailed
+    refresh_token!
+    stop_task(task_id, user_id) if should_retry?
+    increase_retry_counter
   end
 
   def find_entry(user_id, task_id)
@@ -76,6 +112,10 @@ class Api::HarvestClient
     entries = @client.time.all(Time.now, user_id).select do |entry|
       entry.task_id.to_i == task_id.to_i && entry.ended_at.blank?
     end
+  rescue Harvest::AuthenticationFailed
+    refresh_token!
+    find_entry(user_id, task_id) if should_retry?
+    increase_retry_counter
   end
 end
 
