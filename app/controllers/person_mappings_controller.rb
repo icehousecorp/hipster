@@ -97,7 +97,7 @@ class PersonMappingsController < ApplicationController
 
     respond_to do |format|
       if @person_mapping.save
-        format.html { redirect_to @person_mapping, notice: 'Person mapping was successfully created.' }
+        format.html { redirect_to user_integration_url(@person_mapping.integration.user, @person_mapping.integration), notice: 'Person mapping was successfully created.' }
         format.json { render json: @person_mapping, status: :created, location: @person_mapping }
       else
         find_single_harvest_users
@@ -135,7 +135,7 @@ class PersonMappingsController < ApplicationController
     @person_mapping.destroy
 
     respond_to do |format|
-      format.html { redirect_to integration_person_mappings_url(@person_mapping.integration_id) }
+      format.html { redirect_to user_integration_url(@person_mapping.integration.user, @person_mapping.integration) }
       format.json { head :no_content }
     end
   end

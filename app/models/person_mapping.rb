@@ -6,7 +6,7 @@ class PersonMapping < ActiveRecord::Base
 
   validates(:pivotal_email, :presence => true)
   validates(:pivotal_email, :presence => true)
-  validates :harvest_id, :uniqueness => { :scope => :pivotal_email, message: 'has been mapped' }
+  validates :harvest_id, :uniqueness => { :scope => [:pivotal_email, :integration_id], message: 'has been mapped' }
 
   def harvest_info
   	"#{harvest_id}-#{harvest_name} (#{harvest_email})"

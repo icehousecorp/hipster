@@ -26,7 +26,7 @@
 
   <div class="form-submit">
     <%= link_to 'Edit', edit_person_mapping_path(@person_mapping), class: 'btn' %>
-    <%= link_to 'Back', integration_person_mappings_path(@person_mapping.integration), class: 'btn' %>
+    <%= link_to 'Back', user_integration_path(@person_mapping.integration.user, @person_mapping.integration), class: 'btn' %>
   </div>
 
 </div>

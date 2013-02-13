@@ -78,6 +78,7 @@ class IntegrationsController < ApplicationController
   # GET /integrations/1.json
   def show
     @integration = Integration.find(params[:id])
+    @person_mappings = PersonMapping.where(integration_id: params[:id])
 
     respond_to do |format|
       format.html # show.html.erb
@@ -150,7 +151,7 @@ class IntegrationsController < ApplicationController
     @integration.destroy
 
     respond_to do |format|
-      format.html { redirect_to integrations_url }
+      format.html { redirect_to user_integrations_url(@integration.user) }
       format.json { head :no_content }
     end
   end
