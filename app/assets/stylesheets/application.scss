@@ -23,6 +23,11 @@ body{
   background: #f9f9f9
 }
 
+.logo{
+  width: $padding * 2;
+  height: auto;
+}
+
 .container-narrow{
   max-width: 940px;
   margin: 0 auto;
@@ -52,6 +57,11 @@ body{
   margin-bottom: $padding;
   margin-top: $padding;
   padding-bottom: $padding/2;
+  b{
+    position: relative;
+    top: 2px;
+    left: 5px
+  }
   .btn{
     margin-top: 5px;
     margin-left: 8px;
