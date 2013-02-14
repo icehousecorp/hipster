@@ -5,6 +5,7 @@
   <%= stylesheet_link_tag    "application", :media => "all" %>
   <%= javascript_include_tag "application" %>
   <%= csrf_meta_tags %>
+  <link rel="shortcut icon" href="logo.png">
 </head>
 <body>
 
@@ -20,7 +21,7 @@
         <li><%= link_to 'Login', '/auth/google_oauth2', class: 'btn' %></li>
       <% end %>
       </ul>
-      <h3>Hipsterapp</h3>
+      <h3><%= image_tag("logo.png", alt: "Logo", class: "logo") %> <b>Hipster</b> </h3>
     </div>
     <%= yield %>
   </div>
