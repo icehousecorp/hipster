@@ -16,7 +16,11 @@ Pivotalharvested::Application.routes.draw do
     member do
       get 'confirm_harvest'
     end
-    resources :integrations
+    resources :integrations do
+      member do
+        get 'detail'
+      end
+    end
   end
 
   match 'logout' => 'home#logout'
