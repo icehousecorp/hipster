@@ -1,5 +1,9 @@
 <div class="row-fluid">
   <h2>Integrated Projects</h2>
+ 
+ <% if @integrations.empty? %>
+ <p>No Integrated Projects found</p>
+ <% else %>
   <table class="table">
     <thead>
       <tr>
@@ -25,5 +29,7 @@
       </tbody>
   <% end %>
   </table>
+
+  <% end %>
   <%= link_to 'New Integration', new_user_integration_path(@user), class: 'btn' %>
 </div>

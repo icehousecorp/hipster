@@ -25,8 +25,12 @@ class IntegrationsController < ApplicationController
   end
 
   def fetch_projects
-    @harvest_projects = harvest_projects
-    @pivotal_projects = pivotal_projects
+    @harvest_projects = harvest_projects.select do |project_entry|
+          Integration.where(harvest_project_id: project_entry.id).first.nil?
+      end
+    @pivotal_projects = pivotal_projects.select do |project_entry|
+          Integration.where(pivotal_project_id: project_entry.id).first.nil?
+      end
   end
 
   def harvest_api
