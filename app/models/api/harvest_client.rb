@@ -108,9 +108,9 @@ class Api::HarvestClient
   end
 
   def find_entry(user_id, task_id)
-    # puts "finding entry for user: #{user_id} and task_id: #{task_id}"
+    #puts "finding entry for user: #{user_id} and task_id: #{task_id}"
     entries = @client.time.all(Time.now, user_id).select do |entry|
-      entry.task_id.to_i == task_id.to_i && entry.ended_at.blank?
+      entry.task_id.to_i == task_id.to_i && entry.ended_at.blank? && !entry.started_at.blank?
     end
   rescue Harvest::AuthenticationFailed
     refresh_token!
