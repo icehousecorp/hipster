@@ -78,12 +78,19 @@ class IntegrationsController < ApplicationController
   # GET /integrations/1.json
   def show
     @integration = Integration.find(params[:id])
-    @person_mappings = PersonMapping.where(integration_id: params[:id])
+    # @person_mappings = PersonMapping.where(integration_id: params[:id])
 
-    respond_to do |format|
-      format.html # show.html.erb
-      format.json { render json: @integration }
-    end
+    # respond_to do |format|
+      render :template => "layouts/webhook", :layout => nil
+      # format.html # show.html.erb
+      # format.json { render json: @integration }
+    # end
+  end
+
+  def detail
+    @integration = Integration.find(params[:id])
+    @person_mappings = PersonMapping.where(integration_id: params[:id])
+    render "show"
   end
 
   # GET /integrations/new

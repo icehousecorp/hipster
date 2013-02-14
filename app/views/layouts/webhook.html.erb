@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hipster</title>
+  <%= stylesheet_link_tag    "application", :media => "all" %>
+  <%= javascript_include_tag "application" %>
+  <%= csrf_meta_tags %>
+  <link rel="shortcut icon" href="logo.png">
+</head>
+<body class="frame">
+
+    <div class="masthead">
+      <ul class="nav nav-pills pull-right">
+        <li class="webhook-callback"><strong>Copy this url into Web Hook URL bellow: </strong><code><%= callback_integration_url(@integration) %></code></li>
+        <li><%= link_to "Next", detail_user_integration_path, class: 'btn' %></li>
+      </ul>
+      <h3><%= image_tag("logo.png", alt: "Logo", class: "logo") %> <b>Hipster</b> </h3>
+    </div>
+
+    <iframe src="https://www.pivotaltracker.com/projects/<%= @integration.pivotal_project_id %>/integrations#webhook_settings"></iframe>
+
+</body>
+</html>
