@@ -57,17 +57,35 @@ body{
   margin-bottom: $padding;
   margin-top: $padding;
   padding-bottom: $padding/2;
-  b{
-    position: relative;
-    top: 2px;
-    left: 5px
-  }
   .btn{
     margin-top: 5px;
     margin-left: 8px;
     margin-right: 0;
     padding-top: 6px !important;
     padding-bottom: 6px !important;
+  }
+}
+
+.frame {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  .masthead{
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-bottom: 0;
+    border: none;
+  }
+  .webhook-callback{
+    position: relative;
+    top: 12px;
+    right: 10px
+  }
+  iframe{
+    width: 100%;
+    height: 80%;
+    border: none;
+    margin: 0;
   }
 }
 
