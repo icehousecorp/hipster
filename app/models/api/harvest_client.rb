@@ -20,6 +20,7 @@ class Api::HarvestClient
   end
 
   def refresh_token!
+    puts "Refresh Token Now oauth_client #{oauth_client}, harvest_token #{user.harvest_token}, refresh_token #{user.harvest_refresh_token}"
     token = OAuth2::AccessToken.new(oauth_client, user.harvest_token, refresh_token: user.harvest_refresh_token).refresh!
     user.harvest_token = token.token
     user.harvest_refresh_token = token.refresh_token
@@ -44,6 +45,17 @@ class Api::HarvestClient
   def increase_retry_counter
     @retry_count ||= 0
     @retry_count += 1
+  end
+
+  def create_project(project_name)
+    harvest_client = @client.clients.all.first;
+
+    project = Harvest::Project.new(:name => project_name, :client_id => harvest_client.id, :billable => 'Y', :notes => nil)
+    project = @client.projects.create(project)
+  rescue Harvest::AuthenticationFailed
+    refresh_token!
+    create_project(project_name) if should_retry?
+    increase_retry_counter
   end
 
   def all_projects

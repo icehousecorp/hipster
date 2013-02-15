@@ -19,4 +19,11 @@ class Api::PivotalClient
     # puts result.inspect
     # result
   end
+
+  def create_project(project_name)
+    project = PivotalTracker::Project.new(:name => project_name)
+    project = project.create
+    #puts project.inspect
+    #project
+  end
 end

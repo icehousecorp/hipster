@@ -2,15 +2,19 @@
   <%= f.error_notification %>
 
   <div class="form-inputs">
+    <div valign="center"><input type="radio" name="selection" id="selection"> Automated Mapping</div>
+     <%= f.input :project_name %>
+    <br><input type="radio" name="selection" id="selection"/> Manual Mapping<br/>
     <%= f.input :harvest_project_id, as: :select, collection: @harvest_projects %>
     <%= f.input :pivotal_project_id, as: :select, collection: @pivotal_projects %>
+   
     <%= f.association :user, as: :hidden %>
   </div>
   <div class="form-submit">
-    <%= f.button :submit %>
+    <%= f.button :submit, :value => 'Create Project' %>
 
     <% if @integration.id %>
-      <%= link_to 'Cancel', user_integration_path(@user.id, @integration.id), class: 'btn' %>
+      <%= link_to 'Cancel', detail_user_integration_path(@user.id, @integration.id), class: 'btn' %>
     <% else %>
       <%= link_to 'Cancel', user_integrations_path(@user), class: 'btn' %>
     <% end %>

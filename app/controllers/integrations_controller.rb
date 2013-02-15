@@ -123,9 +123,37 @@ class IntegrationsController < ApplicationController
     p.name
   end
 
+  def create_harvest_project(project_name)
+    harvest_project = Api::HarvestClient.new(@user).create_project(project_name)
+  end
+
+  def create_pivotal_project(project_name)
+    pivotal_project = Api::PivotalClient.new(@user).create_project(project_name)
+  end
+
   def integration_param
-    params[:integration][:harvest_project_name] = harvest_project_name(params[:integration][:harvest_project_id])
-    params[:integration][:pivotal_project_name] = pivotal_project_name(params[:integration][:pivotal_project_id])
+    if !params[:integration][:project_name].blank?
+      harvest_project = create_harvest_project(params[:integration][:project_name])
+      pivotal_project = create_pivotal_project(params[:integration][:project_name])
+
+      if harvest_project.id.blank?
+        raise "Failed to create the project in harvest"
+      end
+
+      if pivotal_project.id.blank?
+        raise "Failed to create the project in pivotal tracker"
+      end
+
+      params[:integration][:harvest_project_id] = harvest_project.id
+      params[:integration][:harvest_project_name] = harvest_project.name
+      params[:integration][:pivotal_project_id] = pivotal_project.id
+      params[:integration][:pivotal_project_name] = pivotal_project.name
+    else
+      params[:integration][:harvest_project_name] = harvest_project_name(params[:integration][:harvest_project_id])
+      params[:integration][:pivotal_project_name] = pivotal_project_name(params[:integration][:pivotal_project_id])
+    end
+    
+    params[:integration].delete(:project_name)
     params[:integration]
   end
 
