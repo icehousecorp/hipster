@@ -14,6 +14,12 @@ class Api::PivotalClient
 
   def all_users(project_id)
     project = PivotalTracker::Project.find(project_id)
+
+    if project.blank?
+      response = PivotalTracker::Client.connection["/projects/#{project_id}"].get
+      puts response.inspect
+      project = PivotalTracker::Project.parse(response)
+    end
     # puts project.inspect
     result = project.memberships.all
     # puts result.inspect
@@ -23,7 +29,5 @@ class Api::PivotalClient
   def create_project(project_name)
     project = PivotalTracker::Project.new(:name => project_name)
     project = project.create
-    #puts project.inspect
-    #project
   end
 end
