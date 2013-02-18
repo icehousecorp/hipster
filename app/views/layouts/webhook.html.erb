@@ -11,7 +11,15 @@
 
     <div class="masthead">
       <ul class="nav nav-pills pull-right">
-        <li class="webhook-callback"><strong>Copy this url into Web Hook URL bellow: </strong><code><%= callback_integration_url(@integration) %></code></li>
+        <li class="webhook-callback"><strong>Copy this url into Web Hook URL bellow: </strong><code>
+          <%= if callback_integration_url(@integration).include? "hipster.icehousecorp.com"
+                callback_integration_url(@integration).sub("hipster.icehousecorp.com", "hipster.icehousecorp.com:8000")
+              else
+                callback_integration_url(@integration)
+              end
+          %>
+
+        </code></li>
         <li><%= link_to "Next", detail_user_integration_path, class: 'btn' %></li>
       </ul>
       <h3><%= image_tag("logo.png", alt: "Logo", class: "logo") %> <b>Hipster</b> </h3>
