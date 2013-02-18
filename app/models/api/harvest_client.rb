@@ -54,16 +54,20 @@ class Api::HarvestClient
     project = @client.projects.create(project)
   rescue Harvest::AuthenticationFailed
     refresh_token!
-    create_project(project_name) if should_retry?
-    increase_retry_counter
+    if should_retry?
+      create_project(project_name)
+      increase_retry_counter
+    end
   end
 
   def all_projects
     @client.projects.all
   rescue Harvest::AuthenticationFailed
     refresh_token!
-    all_projects if should_retry?
-    increase_retry_counter
+    if should_retry?
+      all_projects
+      increase_retry_counter
+    end
   end
 
   def all_users(project_id)
@@ -76,8 +80,10 @@ class Api::HarvestClient
     assigned_users
   rescue Harvest::AuthenticationFailed
     refresh_token!
-    all_users(project_id) if should_retry?
-    increase_retry_counter
+    if should_retry?
+      all_users(project_id)
+      increase_retry_counter
+    end
   end
 
   def create(task_name, project_id)
@@ -91,8 +97,10 @@ class Api::HarvestClient
     task
   rescue Harvest::AuthenticationFailed
     refresh_token!
-    create(task_name, project_id) if should_retry?
-    increase_retry_counter
+    if should_retry?
+      create(task_name, project_id)
+      increase_retry_counter
+    end
   end
 
   def start_task(task_id, harvest_project_id, user_id)
@@ -106,8 +114,10 @@ class Api::HarvestClient
     end
   rescue Harvest::AuthenticationFailed
     refresh_token!
-    start_task(task_id, harvest_project_id, user_id) if should_retry?
-    increase_retry_counter
+    if should_retry?
+      start_task(task_id, harvest_project_id, user_id)
+      increase_retry_counter
+    end
   end
 
   def stop_task(task_id, user_id)
@@ -115,8 +125,10 @@ class Api::HarvestClient
     @client.time.toggle(entries.first.id, user_id) unless entries.empty?
   rescue Harvest::AuthenticationFailed
     refresh_token!
-    stop_task(task_id, user_id) if should_retry?
-    increase_retry_counter
+    if should_retry?
+      stop_task(task_id, user_id)
+      increase_retry_counter
+    end
   end
 
   def find_entry(user_id, task_id)
@@ -126,8 +138,10 @@ class Api::HarvestClient
     end
   rescue Harvest::AuthenticationFailed
     refresh_token!
-    find_entry(user_id, task_id) if should_retry?
-    increase_retry_counter
+    if should_retry?
+      find_entry(user_id, task_id)
+      increase_retry_counter
+    end
   end
 end
 
