@@ -1,7 +1,7 @@
 class IntegrationsController < ApplicationController
   CACHE_PERIODE = 3.minutes
   before_filter :find_user, except: [:callback, :reload]
-  before_filter :fetch_projects, only: [:new , :edit]
+  before_filter :fetch_projects, :fetch_clients, only: [:new , :edit]
 
   def find_user
     @user = User.find(params[:user_id])
@@ -22,6 +22,16 @@ class IntegrationsController < ApplicationController
     @pivotal_projects ||= Rails.cache.fetch('pivotal_projects', expires_in: CACHE_PERIODE) do
       projects = Api::PivotalClient.new(@user).all_projects
     end
+  end
+
+  def harvest_clients
+    @harvest_clients ||= Rails.cache.fetch('harvest_clients', expires_in: CACHE_PERIODE) do
+      clients = Api::HarvestClient.new(@user).all_clients
+    end
+  end
+
+  def fetch_clients
+    harvest_clients
   end
 
   def fetch_projects
@@ -123,8 +133,8 @@ class IntegrationsController < ApplicationController
     p.name
   end
 
-  def create_harvest_project(project_name)
-    harvest_project = Api::HarvestClient.new(@user).create_project(project_name)
+  def create_harvest_project(project_name, harvest_client_id)
+    harvest_project = Api::HarvestClient.new(@user).create_project(project_name, harvest_client_id)
   end
 
   def create_pivotal_project(project_name)
@@ -132,16 +142,16 @@ class IntegrationsController < ApplicationController
   end
 
   def integration_param
-    if !params[:integration][:project_name].blank?
-      harvest_project = create_harvest_project(params[:integration][:project_name])
+    if params[:selection].eql? "auto"
+      harvest_project = create_harvest_project(params[:integration][:project_name], params[:integration][:client_id])
       pivotal_project = create_pivotal_project(params[:integration][:project_name])
 
-      if harvest_project.id.blank?
-        raise "Failed to create the project in harvest"
+      if harvest_project.blank? || harvest_project.id.blank?
+        raise "Failed to create project in harvest"
       end
 
-      if pivotal_project.id.blank?
-        raise "Failed to create the project in pivotal tracker"
+      if pivotal_project.blank? || pivotal_project.id.blank?
+        raise "Failed to create project in pivotal tracker"
       end
 
       params[:integration][:harvest_project_id] = harvest_project.id
@@ -153,6 +163,7 @@ class IntegrationsController < ApplicationController
       params[:integration][:pivotal_project_name] = pivotal_project_name(params[:integration][:pivotal_project_id])
     end
     
+    params[:integration].delete(:client_id)
     params[:integration].delete(:project_name)
     params[:integration]
   end
@@ -160,13 +171,20 @@ class IntegrationsController < ApplicationController
   # POST /integrations
   # POST /integrations.json
   def create
-    @integration = Integration.new(integration_param)
-
-    if @integration.save
-      redirect_to user_integration_path(@user, @integration), notice: 'Integration was successfully created.'
-    else
-      fetch_projects
-      render action: "new"
+    if (params[:selection].eql? "auto") && params[:integration][:client_id].blank?
+      redirect_to new_user_integration_path(@user), notice: 'Please select the client'
+    elsif(params[:selection].eql? "auto") && params[:integration][:project_name].blank?
+      redirect_to new_user_integration_path(@user), notice: 'Please specify project name'
+    elsif (params[:selection].eql? "manual") && (params[:integration][:harvest_project_id].blank? || params[:integration][:pivotal_project_id].blank?)
+      redirect_to new_user_integration_path(@user), notice: 'Harvest and Pivotal projects are required'
+    else 
+      @integration = Integration.new(integration_param)
+      if @integration.save
+        redirect_to user_integration_path(@user, @integration), notice: 'Integration was successfully created.'
+      else
+        fetch_projects
+        render action: "new"
+      end
     end
   end
 

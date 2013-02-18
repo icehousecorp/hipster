@@ -1,10 +1,18 @@
+  <% if notice %>
+  <div class="alert alert-success">
+    <%= notice %>
+    <a class="close" data-dismiss="alert" href="#">&times;</a>
+  </div>
+  <% end %>
 <%= simple_form_for([@user, @integration]) do |f| %>
   <%= f.error_notification %>
 
   <div class="form-inputs">
-    <div valign="center"><input type="radio" name="selection" id="selection"> Automated Mapping</div>
+    <div valign="center">
+      <input type="radio" name="selection" id="selection" value="auto"> Automated Mapping</div>
+      <%= f.input :client_id, as: :select, collection: @harvest_clients %>
      <%= f.input :project_name %>
-    <br><input type="radio" name="selection" id="selection"/> Manual Mapping<br/>
+    <br><input type="radio" name="selection" id="selection" value="manual"/> Manual Mapping<br/>
     <%= f.input :harvest_project_id, as: :select, collection: @harvest_projects %>
     <%= f.input :pivotal_project_id, as: :select, collection: @pivotal_projects %>
    
