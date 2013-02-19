@@ -24,6 +24,8 @@ class Api::HarvestClient
     token = OAuth2::AccessToken.new(oauth_client, user.harvest_token, refresh_token: user.harvest_refresh_token).refresh!
     user.harvest_token = token.token
     user.harvest_refresh_token = token.refresh_token
+
+    @client = Harvest.token_client(user.harvest_subdomain, user.harvest_token, ssl: true) if user.harvest_token
     user.save
   end
 
@@ -57,28 +59,34 @@ class Api::HarvestClient
   def create_project(project_name, client_id)
     project = Harvest::Project.new(:name => project_name, :client_id => client_id)
     project = @client.projects.create(project)
-  rescue Harvest::AuthenticationFailed
+  rescue Harvest::AuthenticationFailed => e
     refresh_token!
     if should_retry?
       create_project(project_name, client_id)
+    else
+      raise e
     end
   end
 
   def all_clients
       @client.clients.all
-    rescue Harvest::AuthenticationFailed
+    rescue Harvest::AuthenticationFailed => e
     refresh_token!
     if should_retry?
       all_clients
+    else
+      raise e
     end
   end
 
   def all_projects
     @client.projects.all
-  rescue Harvest::AuthenticationFailed
+  rescue Harvest::AuthenticationFailed => e
     refresh_token!
     if should_retry?
       all_projects
+    else
+      raise e
     end
   end
 
@@ -90,10 +98,12 @@ class Api::HarvestClient
       assigned_users << users.select {|u| u.id == a.user_id}.first
     end
     assigned_users
-  rescue Harvest::AuthenticationFailed
+  rescue Harvest::AuthenticationFailed => e
     refresh_token!
     if should_retry?
       all_users(project_id)
+    else
+      raise e
     end
   end
 
@@ -156,10 +166,12 @@ class Api::HarvestClient
     entries = @client.time.all(Time.now, user_id).select do |entry|
       entry.task_id.to_i == task_id.to_i && entry.ended_at.blank? && !entry.started_at.blank?
     end
-  rescue Harvest::AuthenticationFailed
+  rescue Harvest::AuthenticationFailed => e
     refresh_token!
     if should_retry?
       find_entry(user_id, task_id)
+    else
+      raise e
     end
   end
 end

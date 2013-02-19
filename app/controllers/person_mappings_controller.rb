@@ -1,6 +1,6 @@
   class PersonMappingsController < ApplicationController
   CACHE_PERIODE = 5.minutes
-  HARVEST_EXCEPTIONS = [Harvest::NotFound, Harvest::ServerError, Harvest::AuthenticationFailed]
+  HARVEST_EXCEPTIONS = [Harvest::NotFound, Harvest::ServerError, Harvest::AuthenticationFailed, RestClient::ResourceNotFound]
   before_filter :find_integration, except: [:show, :edit, :destroy]
 
   def find_integration
