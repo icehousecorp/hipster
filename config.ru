@@ -2,3 +2,4 @@
 
 require ::File.expand_path('../config/environment',  __FILE__)
 run Pivotalharvested::Application
+use ActiveRecord::ConnectionAdapters::ConnectionManagement
