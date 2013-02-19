@@ -84,7 +84,7 @@ class IntegrationsController < ApplicationController
   # GET /integrations
   # GET /integrations.json
   def index
-    @integrations = Integration.where(user_id: params[:user_id])
+    @integrations = Integration.all
 
     respond_to do |format|
       format.html # index.html.erb
