@@ -5,6 +5,10 @@ class IntegrationsController < ApplicationController
 
   def find_user
     @user = User.find(params[:user_id])
+    if @user.harvest_secret.blank? || @user.harvest_subdomain.blank? || @user.harvest_identifier.blank? || @user.pivotal_token.blank?
+      redirect_to edit_user_path(@user), notice: "Incomplete user profile"
+    end
+    @user
   end
 
   def reload
@@ -147,11 +151,9 @@ class IntegrationsController < ApplicationController
       pivotal_project = create_pivotal_project(params[:integration][:project_name])
 
       if harvest_project.blank? || harvest_project.id.blank?
-        raise "Failed to create project in harvest"
-      end
-
-      if pivotal_project.blank? || pivotal_project.id.blank?
-        raise "Failed to create project in pivotal tracker"
+        redirect_to new_user_integration_path(@user), notice: 'Failed to create new project in Harvest. Please try again'
+      elsif pivotal_project.blank? || pivotal_project.id.blank?
+        redirect_to new_user_integration_path(@user), notice: 'Failed to create new project in Pivotal Tracker. Please try again'
       end
 
       params[:integration][:harvest_project_id] = harvest_project.id

@@ -1,5 +1,6 @@
-class PersonMappingsController < ApplicationController
+  class PersonMappingsController < ApplicationController
   CACHE_PERIODE = 5.minutes
+  HARVEST_EXCEPTIONS = [Harvest::NotFound, Harvest::ServerError, Harvest::AuthenticationFailed]
   before_filter :find_integration, except: [:show, :edit, :destroy]
 
   def find_integration
@@ -30,6 +31,10 @@ class PersonMappingsController < ApplicationController
     @pivotal_single_users ||= find_all_pivotal_users
     mapped_email = @integration.person_mappings.map(&:pivotal_email)
     @pivotal_single_users.reject!{|user| mapped_email.include?(user.email) }
+  end
+
+  def rescue_harvest_error!
+    redirect_to detail_user_integration_path(@integration.user, @integration), notice: 'The project might have been deleted or there was an error occured in Harvest and/or Pivotal server.'
   end
 
   # GET /person_mappings
@@ -65,6 +70,8 @@ class PersonMappingsController < ApplicationController
       format.html # new.html.erb
       format.json { render json: @person_mapping }
     end
+  rescue *HARVEST_EXCEPTIONS
+    rescue_harvest_error!  
   end
 
   # GET /person_mappings/1/edit
@@ -73,6 +80,8 @@ class PersonMappingsController < ApplicationController
     @integration = @person_mapping.integration
     find_single_harvest_users
     find_single_pivotal_users
+  rescue *HARVEST_EXCEPTIONS
+    rescue_harvest_error!
   end
 
   def person_mapping_params
@@ -106,6 +115,8 @@ class PersonMappingsController < ApplicationController
         format.json { render json: @person_mapping.errors, status: :unprocessable_entity }
       end
     end
+  rescue *HARVEST_EXCEPTIONS
+    rescue_harvest_error!
   end
 
   # PUT /person_mappings/1
@@ -126,6 +137,8 @@ class PersonMappingsController < ApplicationController
         format.json { render json: @person_mapping.errors, status: :unprocessable_entity }
       end
     end
+  rescue *HARVEST_EXCEPTIONS
+    rescue_harvest_error!
   end
 
   # DELETE /person_mappings/1

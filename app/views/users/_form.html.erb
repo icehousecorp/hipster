@@ -1,6 +1,7 @@
-<% if @error %>
+
+<% if @error || notice %>
   <div class="alert alert-success">
-    <%= @error %>
+    <%= @error ||= notice %>
     <a class="close" data-dismiss="alert" href="#">&times;</a>
   </div>
 <% end %>

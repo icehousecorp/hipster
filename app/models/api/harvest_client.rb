@@ -39,7 +39,14 @@ class Api::HarvestClient
   end
 
   def should_retry?
-    (@retry_count || 0) < 1
+    if (@retry_count || 0) < 2
+      increase_retry_counter
+      true
+    else
+      @retry_count = 0
+      puts "Retry count #{@retry_count}"
+      false
+    end
   end
 
   def increase_retry_counter
@@ -53,7 +60,6 @@ class Api::HarvestClient
   rescue Harvest::AuthenticationFailed
     refresh_token!
     if should_retry?
-      increase_retry_counter
       create_project(project_name, client_id)
     end
   end
@@ -63,7 +69,6 @@ class Api::HarvestClient
     rescue Harvest::AuthenticationFailed
     refresh_token!
     if should_retry?
-      increase_retry_counter
       all_clients
     end
   end
@@ -73,7 +78,6 @@ class Api::HarvestClient
   rescue Harvest::AuthenticationFailed
     refresh_token!
     if should_retry?
-      increase_retry_counter
       all_projects
     end
   end
@@ -89,7 +93,6 @@ class Api::HarvestClient
   rescue Harvest::AuthenticationFailed
     refresh_token!
     if should_retry?
-      increase_retry_counter
       all_users(project_id)
     end
   end
@@ -106,7 +109,10 @@ class Api::HarvestClient
   rescue Harvest::AuthenticationFailed
     refresh_token!
     if should_retry?
-      increase_retry_counter
+      create(task_name, project_id)
+    end
+  rescue Harvest::ServerError
+    if should_retry?
       create(task_name, project_id)
     end
   end
@@ -123,7 +129,10 @@ class Api::HarvestClient
   rescue Harvest::AuthenticationFailed
     refresh_token!
     if should_retry?
-      increase_retry_counter
+      start_task(task_id, harvest_project_id, user_id)
+    end
+  rescue Harvest::ServerError
+    if should_retry?
       start_task(task_id, harvest_project_id, user_id)
     end
   end
@@ -134,7 +143,10 @@ class Api::HarvestClient
   rescue Harvest::AuthenticationFailed
     refresh_token!
     if should_retry?
-      increase_retry_counter
+      stop_task(task_id, user_id)
+    end
+  rescue Harvest::ServerError
+    if should_retry?
       stop_task(task_id, user_id)
     end
   end
@@ -147,7 +159,6 @@ class Api::HarvestClient
   rescue Harvest::AuthenticationFailed
     refresh_token!
     if should_retry?
-      increase_retry_counter
       find_entry(user_id, task_id)
     end
   end
