@@ -9,11 +9,15 @@ class UsersController < ApplicationController
       format.html # show.html.erb
       format.json { render json: @user }
     end
+  ensure
+    ActiveRecord::Base.connection.close
   end
 
   # GET /users/1/edit
   def edit
     @user = User.find(session[:user_id]|| params[:id])
+  ensure
+    ActiveRecord::Base.connection.close
   end
 
   def validate_pivotal_token
@@ -46,6 +50,8 @@ class UsersController < ApplicationController
       @error = 'Wrong pivotal token.' if @user.pivotal_token_changed?
       render action: "edit"
     end
+  ensure
+    ActiveRecord::Base.connection.close
   end
 
   # DELETE /users/1
@@ -58,5 +64,7 @@ class UsersController < ApplicationController
       format.html { redirect_to users_url }
       format.json { head :no_content }
     end
+  ensure
+    ActiveRecord::Base.connection.close
   end
 end

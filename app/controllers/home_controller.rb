@@ -11,6 +11,8 @@ class HomeController < ApplicationController
       end
       redirect_to user_integrations_path(current_user)
     end
+  ensure
+    ActiveRecord::Base.connection.close
   end
 
   def logout
@@ -35,5 +37,7 @@ class HomeController < ApplicationController
   	session[:user_id] = identity.user_id
 
 	# render text: request.env['omniauth.auth'].to_hash.inspect
+  ensure
+    ActiveRecord::Base.connection.close
   end
 end

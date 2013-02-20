@@ -79,6 +79,8 @@ class IntegrationsController < ApplicationController
     # persist activity param incase we need it in the future
     store(activity)
     head :no_content
+  ensure
+    ActiveRecord::Base.connection.close
   end
 
   # GET /integrations
@@ -90,6 +92,8 @@ class IntegrationsController < ApplicationController
       format.html # index.html.erb
       format.json { render json: @integrations }
     end
+  ensure
+    ActiveRecord::Base.connection.close
   end
 
   # GET /integrations/1
@@ -103,6 +107,8 @@ class IntegrationsController < ApplicationController
       # format.html # show.html.erb
       # format.json { render json: @integration }
     # end
+  ensure
+    ActiveRecord::Base.connection.close
   end
 
   def detail
@@ -120,11 +126,15 @@ class IntegrationsController < ApplicationController
       format.html # new.html.erb
       format.json { render json: @integration }
     end
+  ensure
+    ActiveRecord::Base.connection.close
   end
 
   # GET /integrations/1/edit
   def edit
     @integration = Integration.find(params[:id])
+  ensure
+    ActiveRecord::Base.connection.close
   end
 
   def harvest_project_name(pid)
@@ -188,6 +198,8 @@ class IntegrationsController < ApplicationController
         render action: "new"
       end
     end
+  ensure
+    ActiveRecord::Base.connection.close
   end
 
   # PUT /integrations/1
@@ -201,6 +213,8 @@ class IntegrationsController < ApplicationController
       fetch_projects
       render action: "edit"
     end
+  ensure
+    ActiveRecord::Base.connection.close
   end
 
   # DELETE /integrations/1
@@ -213,6 +227,8 @@ class IntegrationsController < ApplicationController
       format.html { redirect_to user_integrations_url(@integration.user) }
       format.json { head :no_content }
     end
+  ensure
+    ActiveRecord::Base.connection.close
   end
 end
 
