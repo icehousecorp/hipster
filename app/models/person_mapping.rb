@@ -13,6 +13,6 @@ class PersonMapping < ActiveRecord::Base
   end
 
   def pivotal_info
-  	"#{pivotal_name} (#{pivotal_email})"
+  	"#{pivotal_id}-#{pivotal_name} (#{pivotal_email})"
   end
 end
