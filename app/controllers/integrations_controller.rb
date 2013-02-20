@@ -139,12 +139,12 @@ class IntegrationsController < ApplicationController
 
   def harvest_project_name(pid)
     p = harvest_projects.select{|project| project.id.to_i == pid.to_i}.first
-    p.name
+    p.name if !p.blank?
   end
 
   def pivotal_project_name(pid)
     p = pivotal_projects.select{|project| project.id.to_i == pid.to_i}.first
-    p.name
+    p.name if !p.blank?
   end
 
   def create_harvest_project(project_name, harvest_client_id)

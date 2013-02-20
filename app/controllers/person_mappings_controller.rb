@@ -37,6 +37,28 @@
     redirect_to detail_user_integration_path(@integration.user, @integration), notice: 'The project might have been deleted or there was an error occured in Harvest and/or Pivotal server.'
   end
 
+  def find_single_harvest_user_by_email(email_address)
+    find_all_harvest_users.select do |harvest_user|
+      puts "email #{email_address} and harvest #{harvest_user.email}"
+      email_address.eql? harvest_user.email
+    end
+  end
+
+  def populate
+    pivotal_users = find_all_pivotal_users
+    pivotal_users.select do |pivotal_user|
+          harvest_user = find_single_harvest_user_by_email(pivotal_user.email).first
+          if !harvest_user.blank?
+            @person_mapping = PersonMapping.new(integration_id: @integration.id, pivotal_id: @integration.pivotal_project_id, pivotal_name: pivotal_user.name, pivotal_email:pivotal_user.email, harvest_id: @integration.harvest_project_id, harvest_name: harvest_user.try(:first_name) << " " << harvest_user.try(:last_name), harvest_email: harvest_user.email)
+            @person_mapping.save
+          end
+          false
+      end if !pivotal_users.blank?
+    redirect_to detail_user_integration_path(@integration.user, @integration)
+  ensure
+    ActiveRecord::Base.connection.close
+  end
+
   # GET /person_mappings
   # GET /person_mappings.json
   def index
@@ -46,6 +68,8 @@
       format.html # index.html.erb
       format.json { render json: @person_mappings }
     end
+  ensure
+    ActiveRecord::Base.connection.close
   end
 
   # GET /person_mappings/1
@@ -57,6 +81,8 @@
       format.html # show.html.erb
       format.json { render json: @person_mapping }
     end
+  ensure
+    ActiveRecord::Base.connection.close
   end
 
   # GET /person_mappings/new
@@ -72,6 +98,8 @@
     end
   rescue *HARVEST_EXCEPTIONS
     rescue_harvest_error!  
+  ensure
+    ActiveRecord::Base.connection.close
   end
 
   # GET /person_mappings/1/edit
@@ -82,6 +110,8 @@
     find_single_pivotal_users
   rescue *HARVEST_EXCEPTIONS
     rescue_harvest_error!
+  ensure
+    ActiveRecord::Base.connection.close
   end
 
   def person_mapping_params
@@ -90,6 +120,7 @@
     pivotal_user = pivotal_users.select{|user| user.id == pivotal_id.to_i}.first
     params[:person_mapping][:pivotal_name] = pivotal_user.try(:name)
     params[:person_mapping][:pivotal_email] = pivotal_user.try(:email)
+    params[:person_mapping][:pivotal_id] = pivotal_user.try(:id)
 
     harvest_users = find_all_harvest_users
     harvest_id = params[:person_mapping][:harvest_id]
@@ -117,6 +148,8 @@
     end
   rescue *HARVEST_EXCEPTIONS
     rescue_harvest_error!
+  ensure
+    ActiveRecord::Base.connection.close
   end
 
   # PUT /person_mappings/1
@@ -139,6 +172,8 @@
     end
   rescue *HARVEST_EXCEPTIONS
     rescue_harvest_error!
+  ensure
+    ActiveRecord::Base.connection.close
   end
 
   # DELETE /person_mappings/1
@@ -151,5 +186,7 @@
       format.html { redirect_to detail_user_integration_url(@person_mapping.integration.user, @person_mapping.integration) }
       format.json { head :no_content }
     end
+  ensure
+    ActiveRecord::Base.connection.close
   end
 end

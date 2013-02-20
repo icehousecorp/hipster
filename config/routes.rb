@@ -7,7 +7,11 @@ Pivotalharvested::Application.routes.draw do
     collection do
       get 'reload'
     end
-    resources :person_mappings, except: [:show, :edit, :destroy]
+    resources :person_mappings, except: [:show, :edit, :destroy] do
+      member do
+        get 'populate'
+      end
+    end
   end
   resources :person_mappings, only: [:show, :edit, :destroy]
 
