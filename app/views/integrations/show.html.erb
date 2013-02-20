@@ -40,7 +40,7 @@
       <tr>
         <th>Harvest</th>
         <th>Pivotal</th>
-        <th>Integration</th>
+        <!--th>Integration</th-->
         <th></th>
         <th></th>
         <th></th>
@@ -52,7 +52,7 @@
       <tr>
         <td><%= person_mapping.harvest_info %></td>
         <td><%= person_mapping.pivotal_info %></td>
-        <td><%= person_mapping.integration %></td>
+        <!--td><%= person_mapping.integration %></td-->
         <td><%= link_to 'Show', person_mapping %></td>
         <td><%= link_to 'Edit', edit_person_mapping_path(person_mapping) %></td>
         <td><%= link_to 'Destroy', person_mapping, method: :delete, data: { confirm: 'Are you sure?' } %></td>
@@ -66,6 +66,7 @@
     <!--%= link_to 'Manage Person Mapping', integration_person_mappings_path(@integration), class: 'btn' %-->
     <%= link_to 'Edit Project', edit_user_integration_path(@user, @integration), class: 'btn' %>
     <%= link_to 'New Person mapping', new_integration_person_mapping_path(@integration), class: 'btn' %>
+    <%= link_to 'Populate Person mapping', populate_integration_person_mapping_path(@integration), class: 'btn' %>
     <%= link_to 'Back', user_integrations_path(@user), class: 'btn' %>
   </div>
 
