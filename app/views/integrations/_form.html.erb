@@ -9,10 +9,10 @@
 
   <div class="form-inputs">
     <div valign="center">
-      <input type="radio" checked name="selection" id="selection" value="auto"> Automated Mapping</div>
+      <input type="radio" checked name="integration[selection]" id="integration_selection" value="auto"> Automated Mapping</div>
       <%= f.input :client_id, as: :select, collection: @harvest_clients %>
      <%= f.input :project_name %>
-    <br><input type="radio" name="selection" id="selection" value="manual"/> Manual Mapping<br/>
+    <br><input type="radio" name="integration[selection]" id="integration_selection" value="manual"/> Manual Mapping<br/>
     <%= f.input :harvest_project_id, as: :select, collection: @harvest_projects %>
     <%= f.input :pivotal_project_id, as: :select, collection: @pivotal_projects %>
    

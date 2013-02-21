@@ -3,7 +3,7 @@ class HomeController < ApplicationController
     if current_user
       if params[:code]
         # raise params.inspect
-        token = Api::HarvestClient.new(current_user).token(params[:code], root_url)
+        token = harvest_api.token(params[:code], root_url)
         current_user.harvest_token = token.token
         current_user.harvest_refresh_token = token.refresh_token
         current_user.save
@@ -11,8 +11,6 @@ class HomeController < ApplicationController
       end
       redirect_to user_integrations_path(current_user)
     end
-  ensure
-    ActiveRecord::Base.connection.close
   end
 
   def logout
@@ -35,9 +33,5 @@ class HomeController < ApplicationController
 	  	redirect_to edit_user_path(identity.user_id)
   	end
   	session[:user_id] = identity.user_id
-
-	# render text: request.env['omniauth.auth'].to_hash.inspect
-  ensure
-    ActiveRecord::Base.connection.close
   end
 end

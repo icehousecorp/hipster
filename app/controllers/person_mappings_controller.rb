@@ -1,4 +1,4 @@
-  class PersonMappingsController < ApplicationController
+class PersonMappingsController < ApplicationController
   CACHE_PERIODE = 5.minutes
   HARVEST_EXCEPTIONS = [Harvest::NotFound, Harvest::ServerError, Harvest::AuthenticationFailed, RestClient::ResourceNotFound]
   before_filter :find_integration, except: [:show, :edit, :destroy]
@@ -7,56 +7,37 @@
     @integration = Integration.find(params[:integration_id])
   end
 
-  def find_all_harvest_users
-    Rails.cache.fetch("harvest_users_#{@integration.id}", expires_in: CACHE_PERIODE) do
-      api = Api::HarvestClient.new @integration.user
-      api.all_users(@integration.harvest_project_id)
+  def safe_invoke
+    begin
+      yield
+    rescue *HARVEST_EXCEPTIONS
+      redirect_to detail_user_integration_path(@integration.user, @integration), notice: 'The project might have been deleted or there was an error occured in Harvest and/or Pivotal server.'
     end
   end
 
   def find_single_harvest_users
-    @harvest_single_users ||= find_all_harvest_users
+    @harvest_single_users ||= harvest_api.cached_users(@integration.id, @integration.harvest_project_id)
     mapped_id = @integration.person_mappings.map(&:harvest_id)
     @harvest_single_users.reject!{|user| mapped_id.include?(user.id) }
   end
 
-  def find_all_pivotal_users
-    Rails.cache.fetch("pivotal_users_#{@integration.id}", expires_in: CACHE_PERIODE) do
-      api = Api::PivotalClient.new @integration.user
-      api.all_users(@integration.pivotal_project_id)
-    end
-  end
-
   def find_single_pivotal_users
-    @pivotal_single_users ||= find_all_pivotal_users
+    @pivotal_single_users ||= pivotal_api.cached_users(@integration.id, @integration.pivotal_project_id)
     mapped_email = @integration.person_mappings.map(&:pivotal_email)
     @pivotal_single_users.reject!{|user| mapped_email.include?(user.email) }
   end
 
-  def rescue_harvest_error!
-    redirect_to detail_user_integration_path(@integration.user, @integration), notice: 'The project might have been deleted or there was an error occured in Harvest and/or Pivotal server.'
-  end
-
-  def find_single_harvest_user_by_email(email_address)
-    find_all_harvest_users.select do |harvest_user|
-      puts "email #{email_address} and harvest #{harvest_user.email}"
-      email_address.eql? harvest_user.email
-    end
-  end
-
   def populate
-    pivotal_users = find_all_pivotal_users
+    pivotal_users = pivotal_api.cached_users(@integration.id, @integration.pivotal_project_id)
     pivotal_users.select do |pivotal_user|
-          harvest_user = find_single_harvest_user_by_email(pivotal_user.email).first
-          if !harvest_user.blank?
-            @person_mapping = PersonMapping.new(integration_id: @integration.id, pivotal_id: @integration.pivotal_project_id, pivotal_name: pivotal_user.name, pivotal_email:pivotal_user.email, harvest_id: @integration.harvest_project_id, harvest_name: harvest_user.try(:first_name) << " " << harvest_user.try(:last_name), harvest_email: harvest_user.email)
-            @person_mapping.save
-          end
-          false
-      end if !pivotal_users.blank?
+      harvest_user = harvest_api.get_harvest_user_by_email(@integration.id, @integration.harvest_project_id, pivotal_user.email).first
+      unless harvest_user.blank?
+        @person_mapping = @integration.create_mapping(pivotal_user, harvest_user)
+        @person_mapping.save
+      end
+      false
+    end unless pivotal_users.blank?
     redirect_to detail_user_integration_path(@integration.user, @integration)
-  ensure
-    ActiveRecord::Base.connection.close
   end
 
   # GET /person_mappings
@@ -68,8 +49,6 @@
       format.html # index.html.erb
       format.json { render json: @person_mappings }
     end
-  ensure
-    ActiveRecord::Base.connection.close
   end
 
   # GET /person_mappings/1
@@ -81,99 +60,73 @@
       format.html # show.html.erb
       format.json { render json: @person_mapping }
     end
-  ensure
-    ActiveRecord::Base.connection.close
   end
 
   # GET /person_mappings/new
   # GET /person_mappings/new.json
   def new
-    find_single_harvest_users
-    find_single_pivotal_users
-    @person_mapping = PersonMapping.new(integration_id: params[:integration_id])
+    safe_invoke {
+      find_single_harvest_users
+      find_single_pivotal_users
+      @person_mapping = PersonMapping.new(integration_id: params[:integration_id])
 
-    respond_to do |format|
-      format.html # new.html.erb
-      format.json { render json: @person_mapping }
-    end
-  rescue *HARVEST_EXCEPTIONS
-    rescue_harvest_error!  
-  ensure
-    ActiveRecord::Base.connection.close
+      respond_to do |format|
+        format.html # new.html.erb
+        format.json { render json: @person_mapping }
+      end
+    }
   end
 
   # GET /person_mappings/1/edit
   def edit
-    @person_mapping = PersonMapping.find(params[:id])
-    @integration = @person_mapping.integration
-    find_single_harvest_users
-    find_single_pivotal_users
-  rescue *HARVEST_EXCEPTIONS
-    rescue_harvest_error!
-  ensure
-    ActiveRecord::Base.connection.close
-  end
-
-  def person_mapping_params
-    pivotal_id = params[:person_mapping].delete(:pivotal_name)
-    pivotal_users = find_all_pivotal_users
-    pivotal_user = pivotal_users.select{|user| user.id == pivotal_id.to_i}.first
-    params[:person_mapping][:pivotal_name] = pivotal_user.try(:name)
-    params[:person_mapping][:pivotal_email] = pivotal_user.try(:email)
-    params[:person_mapping][:pivotal_id] = pivotal_user.try(:id)
-
-    harvest_users = find_all_harvest_users
-    harvest_id = params[:person_mapping][:harvest_id]
-    harvest_user = harvest_users.select{|user| user.id.to_i == harvest_id.to_i}.first
-    params[:person_mapping][:harvest_name] = "#{harvest_user.try(:first_name)} #{harvest_user.try(:last_name)}"
-    params[:person_mapping][:harvest_email] = harvest_user.try(:email)
-    params[:person_mapping]
+    safe_invoke {
+      @person_mapping = PersonMapping.find(params[:id])
+      @integration = @person_mapping.integration
+      find_single_harvest_users
+      find_single_pivotal_users
+    }
   end
 
   # POST /person_mappings
   # POST /person_mappings.json
   def create
-    @person_mapping = PersonMapping.new(person_mapping_params)
+    safe_invoke {
+      @person_mapping = PersonMapping.new(params[:person_mapping])
 
-    respond_to do |format|
-      if @person_mapping.save
-        format.html { redirect_to detail_user_integration_url(@person_mapping.integration.user, @person_mapping.integration), notice: 'Person mapping was successfully created.' }
-        format.json { render json: @person_mapping, status: :created, location: @person_mapping }
-      else
-        find_single_harvest_users
-        find_single_pivotal_users
-        format.html { render action: "new" }
-        format.json { render json: @person_mapping.errors, status: :unprocessable_entity }
+      respond_to do |format|
+        if @person_mapping.save
+          format.html { redirect_to detail_user_integration_url(@person_mapping.integration.user, @person_mapping.integration), notice: 'Person mapping was successfully created.' }
+          format.json { render json: @person_mapping, status: :created, location: @person_mapping }
+        else
+          find_single_harvest_users
+          find_single_pivotal_users
+          format.html { render action: "new" }
+          format.json { render json: @person_mapping.errors, status: :unprocessable_entity }
+        end
       end
-    end
-  rescue *HARVEST_EXCEPTIONS
-    rescue_harvest_error!
-  ensure
-    ActiveRecord::Base.connection.close
+  }
   end
 
   # PUT /person_mappings/1
   # PUT /person_mappings/1.json
   def update
-    @person_mapping = PersonMapping.find(params[:id])
+    safe_invoke {
+      @person_mapping = PersonMapping.find(params[:id])
 
-    respond_to do |format|
-      if @person_mapping.update_attributes(person_mapping_params)
-        format.html { redirect_to @person_mapping, notice: 'Person mapping was successfully updated.' }
-        format.json { head :no_content }
-      else
-        @integration = @person_mapping.integration
-        find_single_harvest_users
-        find_single_pivotal_users
+      respond_to do |format|
+        if @person_mapping.update_attributes(person_mapping_params)
+          format.html { redirect_to @person_mapping, notice: 'Person mapping was successfully updated.' }
+          format.json { head :no_content }
+        else
+          @integration = @person_mapping.integration
+          find_single_harvest_users
+          find_single_pivotal_users
 
-        format.html { render action: "edit" }
-        format.json { render json: @person_mapping.errors, status: :unprocessable_entity }
+          format.html { render action: "edit" }
+          format.json { render json: @person_mapping.errors, status: :unprocessable_entity }
+        end
       end
-    end
-  rescue *HARVEST_EXCEPTIONS
-    rescue_harvest_error!
-  ensure
-    ActiveRecord::Base.connection.close
+    }
   end
 
   # DELETE /person_mappings/1
@@ -186,7 +139,5 @@
       format.html { redirect_to detail_user_integration_url(@person_mapping.integration.user, @person_mapping.integration) }
       format.json { head :no_content }
     end
-  ensure
-    ActiveRecord::Base.connection.close
   end
 end

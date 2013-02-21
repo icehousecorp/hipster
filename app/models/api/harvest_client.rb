@@ -1,8 +1,27 @@
 class Api::HarvestClient
   attr_accessor :client, :user
+  NON_AUTHENTICATION_HARVEST_EXCEPTIONS = [Harvest::NotFound, Harvest::ServerError, Harvest::BadRequest, Harvest::Unavailable, Harvest::RateLimited, Harvest::InformHarvest]
+  CACHE_PERIODE = 3.minutes
+
   def initialize(user)
     @user = user
     @client = Harvest.token_client(user.harvest_subdomain, user.harvest_token, ssl: true) if user.harvest_token
+  end
+
+  def safe_invoke args
+    attempt = 0
+    begin
+      yield(args)
+    rescue Harvest::AuthenticationFailed
+      refresh_token!
+      attempt += 1
+      retry unless attempt > 2
+    rescue *NON_AUTHENTICATION_HARVEST_EXCEPTIONS => e
+      if !args[:email_message].blank?
+        email_address = PersonMapping.where(harvest_id: args[:harvest_user_id]).first.harvest_email
+        UserMailer.alert_email(email_address, "#{args[:email_message]}<br>#{e.inspect}").deliver
+      end
+    end
   end
 
   def authorize_url(redirect_uri)
@@ -20,7 +39,6 @@ class Api::HarvestClient
   end
 
   def refresh_token!
-    puts "Refresh Token Now oauth_client #{oauth_client}, harvest_token #{user.harvest_token}, refresh_token #{user.harvest_refresh_token}"
     token = OAuth2::AccessToken.new(oauth_client, user.harvest_token, refresh_token: user.harvest_refresh_token).refresh!
     user.harvest_token = token.token
     user.harvest_refresh_token = token.refresh_token
@@ -40,321 +58,108 @@ class Api::HarvestClient
     oauth_client.auth_code.get_token(code,{:redirect_uri => redirect_uri})
   end
 
-  def should_retry?
-    if (@retry_count || 0) < 2
-      increase_retry_counter
-      true
-    else
-      @retry_count = 0
-      puts "Retry count #{@retry_count}"
-      false
+  def create_project(project_name, client_id)
+    safe_invoke Hash[:project_name => project_name, :client_id => client_id] do |args|
+      project = Harvest::Project.new(:name => args[:project_name], :client_id => args[:client_id])
+      project = @client.projects.create(project)
     end
   end
 
-  def increase_retry_counter
-    @retry_count ||= 0
-    @retry_count += 1
+  def cached_projects
+    Rails.cache.fetch('harvest_projects', expires_in: CACHE_PERIODE) do
+      projects = all_projects
+    end
   end
 
-  def create_project(project_name, client_id)
-    project = Harvest::Project.new(:name => project_name, :client_id => client_id)
-    project = @client.projects.create(project)
-  rescue Harvest::AuthenticationFailed => e
-    refresh_token!
-    if should_retry?
-      create_project(project_name, client_id)
-    else
-      raise e
+  def cached_clients
+    Rails.cache.fetch('harvest_clients', expires_in: CACHE_PERIODE) do
+      clients = all_clients
+    end
+  end
+
+  def cached_users(integration_id, project_id)
+    Rails.cache.fetch('harvest_users_#{integration.id}', expires_in: CACHE_PERIODE) do
+      all_users(project_id)
+    end
+  end
+
+  def get_harvest_project_name(pid)
+    p = cached_projects.select{|project| project.id.to_i == pid.to_i}.first
+    p.name if !p.blank?
+  end
+
+  def get_harvest_user_by_email(integration_id, project_id, email_address)
+    cached_users(integration_id, project_id).select do |harvest_user|
+      puts "email #{email_address} and harvest #{harvest_user.email}"
+      email_address.eql? harvest_user.email
     end
   end
 
   def all_clients
-      @client.clients.all
-    rescue Harvest::AuthenticationFailed => e
-    refresh_token!
-    if should_retry?
-      all_clients
-    else
-      raise e
-    end
+    safe_invoke [] { @client.clients.all }
   end
 
   def all_projects
-    @client.projects.all
-  rescue Harvest::AuthenticationFailed => e
-    refresh_token!
-    if should_retry?
-      all_projects
-    else
-      raise e
-    end
+    safe_invoke [] { @client.projects.all }
   end
 
   def all_users(project_id)
-    assignments = @client.user_assignments.all(project_id)
-    users = @client.users.all
-    assigned_users = []
-    assignments.each do |a|
-      assigned_users << users.select {|u| u.id == a.user_id}.first
-    end
-    assigned_users
-  rescue Harvest::AuthenticationFailed => e
-    refresh_token!
-    if should_retry?
-      all_users(project_id)
-    else
-      raise e
+    safe_invoke Hash[:project_id => project_id] do |args|
+       assignments = @client.user_assignments.all(args[:project_id])
+      users = @client.users.all
+      assigned_users = []
+      assignments.each do |a|
+        assigned_users << users.select {|u| u.id == a.user_id}.first
+      end
+      assigned_users
     end
   end
 
-  def create(task_name, project_id)
-    task = Harvest::Task.new
-    task.name = task_name
-    task = @client.tasks.create(task)
-    assignment = Harvest::TaskAssignment.new
-    assignment.task_id = task.id
-    assignment.project_id = project_id
-    @client.task_assignments.create(assignment)
-    task
-  rescue Harvest::AuthenticationFailed
-    refresh_token!
-    if should_retry?
-      create(task_name, project_id)
-    end
-  rescue Harvest::ServerError
-    if should_retry?
-      create(task_name, project_id)
+   def create(task_name, project_id, user_id)
+    email_message = "Failed to create new story #{task_name} on project id #{project_id}"
+
+    safe_invoke Hash[:task_name=>task_name, :project_id=>project_id, :harvest_user_id=>user_id, :email_message=>email_message] do |args| 
+      puts "start create project"
+      task = Harvest::Task.new
+      task.name = args[:task_name]
+      task = @client.tasks.create(task)
+      assignment = Harvest::TaskAssignment.new
+      assignment.task_id = args[:task_id]
+      assignment.project_id = args[:project_id]
+      @client.task_assignments.create(assignment)
+      puts "inspect #{task.inspect}"
+      task
     end
   end
 
   def start_task(task_id, harvest_project_id, user_id)
-    entries = find_entry(user_id, task_id)
-    if entries.empty?
-      entry = Harvest::TimeEntry.new
-      entry.project_id = harvest_project_id
-      entry.task_id = task_id
-      puts "create time with task_id: #{task_id} and user: #{user_id}"
-      @client.time.create(entry, user_id)
-    end
-  rescue Harvest::AuthenticationFailed
-    refresh_token!
-    if should_retry?
-      start_task(task_id, harvest_project_id, user_id)
-    end
-  rescue Harvest::ServerError
-    if should_retry?
-      start_task(task_id, harvest_project_id, user_id)
+    email_message = "Failed to start new harvest entry with task id #{task_id} on harvest project id #{harvest_project_id}"
+
+    safe_invoke Hash[:task_id => task_id, :harvest_project_id => harvest_project_id, 
+      :harvest_user_id => user_id, :email_message => email_message] do |args|
+      entries = find_entry(args[:harvest_user_id], args[:task_id])
+      if entries.empty?
+        entry = Harvest::TimeEntry.new
+        entry.project_id = args[:task_id]
+        entry.task_id = args[:task_id]
+        @client.time.create(entry, args[:harvest_user_id])
+      end
     end
   end
 
   def stop_task(task_id, user_id)
-    entries = find_entry(user_id, task_id)
-    @client.time.toggle(entries.first.id, user_id) unless entries.empty?
-  rescue Harvest::AuthenticationFailed
-    refresh_token!
-    if should_retry?
-      stop_task(task_id, user_id)
-    end
-  rescue Harvest::ServerError
-    if should_retry?
-      stop_task(task_id, user_id)
+    email_message = "Failed to stop a harvest entry with task id #{task_id} on user #{user_id}"
+
+    safe_invoke Hash[:task_id => task_id, :harvest_user_id => user_id, :email_message => email_message] do |args|
+      entries = find_entry(args[:harvest_user_id], args[:task_id])
+      @client.time.toggle(entries.first.id, user_id) unless entries.empty?
     end
   end
 
   def find_entry(user_id, task_id)
-    #puts "finding entry for user: #{user_id} and task_id: #{task_id}"
     entries = @client.time.all(Time.now, user_id).select do |entry|
       entry.task_id.to_i == task_id.to_i && entry.ended_at.blank? && !entry.started_at.blank?
     end
-  rescue Harvest::AuthenticationFailed => e
-    refresh_token!
-    if should_retry?
-      find_entry(user_id, task_id)
-    else
-      raise e
-    end
-  end
-end
-
-module Harvest
-  module API
-    class Time < Base
-      def toggle(id, user=nil)
-        response = request(:get, credentials, "/daily/timer/#{id.to_i}", query: of_user_query(user))
-        Harvest::TimeEntry.parse(response.parsed_response).first
-      end
-      def create(entry, user=nil)
-        response = request(:post, credentials, '/daily/add', :body => entry.to_json, query: of_user_query(user))
-        Harvest::TimeEntry.parse(response.parsed_response).first
-      end
-    end
-  end
-end
-
-class Harvest::User
-  def name
-    "#{first_name} #{last_name}"
-  end
-end
-
-module Harvest
-  class Base
-    def initialize(credentials, options = {})
-      options[:ssl] = true if options[:ssl].nil?
-      @credentials = credentials
-      raise InvalidCredentials unless credentials.valid?
-    end
-  end
-  class << self
-    def client(subdomain, username, password, options = {})
-      credentials = PasswordCredentials.new(subdomain, username, password, options[:ssl])
-      Harvest::Base.new(credentials, options)
-    end
-
-    def token_client(subdomain, token, options = {})
-      credentials = TokenCredentials.new(subdomain, token, options[:ssl])
-      Harvest::Base.new(credentials, options)
-    end
-
-    def hardy_token_client(subdomain,token, options = {})
-      retries = options.delete(:retry)
-      Harvest::HardyClient.new(token_client(subdomain, token, options), (retries || 5))
-    end
-
-    def hardy_client(subdomain, username, password, options = {})
-      retries = options.delete(:retry)
-      Harvest::HardyClient.new(client(subdomain, username, password, options), (retries || 5))
-    end
-  end
-end
-
-module Harvest
-  module API
-    class Base
-      attr_reader :credentials
-
-      def initialize(credentials)
-        @credentials = credentials
-      end
-
-      class << self
-        def api_model(klass)
-          class_eval <<-END
-            def api_model
-              #{klass}
-            end
-          END
-        end
-      end
-
-      protected
-        def request(method, credentials, path, options = {})
-          params = {}
-          params[:path] = path
-          params[:options] = options
-          params[:method] = method
-
-          response = HTTParty.send(method, "#{credentials.host}#{credentials.build_path(path)}",
-            :query => options[:query],
-            :body => options[:body],
-            :format => :plain,
-            :headers => {
-              "Accept" => "application/json",
-              "Content-Type" => "application/json; charset=utf-8",
-              "User-Agent" => "Harvestable/#{Harvest::VERSION}",
-            }.update(options[:headers] || {}).merge(credentials.headers || {})
-          )
-
-          params[:response] = response.inspect.to_s
-
-          case response.code
-          when 200..201
-            response
-          when 400
-            raise Harvest::BadRequest.new(response, params)
-          when 401
-            raise Harvest::AuthenticationFailed.new(response, params)
-          when 404
-            raise Harvest::NotFound.new(response, params)
-          when 500
-            raise Harvest::ServerError.new(response, params)
-          when 502
-            raise Harvest::Unavailable.new(response, params)
-          when 503
-            raise Harvest::RateLimited.new(response, params)
-          else
-            raise Harvest::InformHarvest.new(response, params)
-          end
-        end
-
-        def of_user_query(user)
-          query = user.nil? ? {} : {"of_user" => user.to_i}
-        end
-    end
-  end
-end
-
-module Harvest
-  class Credentials
-    attr_accessor :subdomain, :ssl
-    
-    def initialize(subdomain, ssl = true)
-      @subdomain, @ssl = subdomain, ssl
-    end
-    
-    def valid?
-      !subdomain.nil?
-    end
-    
-    def basic_auth
-    end
-
-    def build_path(path)
-      path
-    end
-
-    def headers
-      {}
-    end
-    
-    def host
-      "#{ssl ? "https" : "http"}://#{subdomain}.harvestapp.com"
-    end
-  end
-  class PasswordCredentials < Credentials
-    attr_accessor :username, :password
-    
-    def initialize(subdomain, username, password, ssl = true)
-      super(subdomain, ssl)
-      @username, @password = username, password
-    end
-    
-    def valid?
-      super && !username.nil? && !password.nil?
-    end
-    
-    def basic_auth
-      Base64.encode64("#{username}:#{password}").delete("\r\n")
-    end
-    def headers
-      {"Authorization" => "Basic #{basic_auth}"}
-    end
   end
 
-  class TokenCredentials < Credentials
-    attr_accessor :token
-    
-    def initialize(subdomain, token, ssl = true)
-      super(subdomain, ssl)
-      @token = token
-    end
-    
-    def valid?
-      super && !token.nil?
-    end
-
-    def build_path(path)
-      "#{super(path)}?access_token=#{CGI::escape(token)}"
-    end
-  end
 end

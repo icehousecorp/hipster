@@ -9,27 +9,23 @@ class UsersController < ApplicationController
       format.html # show.html.erb
       format.json { render json: @user }
     end
-  ensure
-    ActiveRecord::Base.connection.close
   end
 
   # GET /users/1/edit
   def edit
     @user = User.find(session[:user_id]|| params[:id])
-  ensure
-    ActiveRecord::Base.connection.close
   end
 
   def validate_pivotal_token
     return true unless @user.pivotal_token_changed?
-    client = Api::PivotalClient.new(@user)
-    client.all_projects
+    #client = Api::PivotalClient.new(@user)
+    pivotal_api.all_projects
     rescue
       nil
   end
 
   def confirm_harvest
-    redirect_to Api::HarvestClient.new(current_user).authorize_url(root_url)
+    redirect_to harvest_api.authorize_url(root_url)
   end
 
   # PUT /users/1
@@ -42,7 +38,7 @@ class UsersController < ApplicationController
       puts "user is valid"
       puts need_harvest_login
       if need_harvest_login
-        redirect_to Api::HarvestClient.new(@user).authorize_url(root_url)
+        redirect_to harvest_api.authorize_url(root_url)
       else
         redirect_to @user, notice: 'User was successfully updated.'
       end
@@ -50,8 +46,6 @@ class UsersController < ApplicationController
       @error = 'Wrong pivotal token.' if @user.pivotal_token_changed?
       render action: "edit"
     end
-  ensure
-    ActiveRecord::Base.connection.close
   end
 
   # DELETE /users/1
@@ -64,7 +58,5 @@ class UsersController < ApplicationController
       format.html { redirect_to users_url }
       format.json { head :no_content }
     end
-  ensure
-    ActiveRecord::Base.connection.close
   end
 end
