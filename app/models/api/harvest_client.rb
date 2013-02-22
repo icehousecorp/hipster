@@ -124,7 +124,7 @@ class Api::HarvestClient
       task.name = args[:task_name]
       task = @client.tasks.create(task)
       assignment = Harvest::TaskAssignment.new
-      assignment.task_id = args[:task_id]
+      assignment.task_id = task.id
       assignment.project_id = args[:project_id]
       @client.task_assignments.create(assignment)
       puts "inspect #{task.inspect}"
@@ -140,7 +140,7 @@ class Api::HarvestClient
       entries = find_entry(args[:harvest_user_id], args[:task_id])
       if entries.empty?
         entry = Harvest::TimeEntry.new
-        entry.project_id = args[:task_id]
+        entry.project_id = args[:harvest_project_id]
         entry.task_id = args[:task_id]
         @client.time.create(entry, args[:harvest_user_id])
       end

@@ -46,16 +46,19 @@ class IntegrationsController < ApplicationController
 
   def callback
     activity = ActivityParam.new(params)
+    harvest_id = PersonMapping.where(pivotal_name: activity.author, integration_id: @integration.id).first.harvest_id
+
     case activity.type
     when ActivityParam::CREATE_STORY
-      task = harvest_api.create(activity.task_name, @integration.harvest_project_id, activity.user_id)
+      task = harvest_api.create(activity.task_name, @integration.harvest_project_id, harvest_id)
+      puts task.inspect
       TaskStory.create(task_id: task.id, story_id: activity.story_id)
     when ActivityParam::START_STORY
       task_id = find_task_for_story(activity.story_id)
-      harvest_api.start_task(task_id, @integration.harvest_project_id, activity.user_id)
+      harvest_api.start_task(task_id, @integration.harvest_project_id, harvest_id)
     when ActivityParam::FINISH_STORY
       task_id = find_task_for_story(activity.story_id)
-      harvest_api.stop_task(task_id, activity.user_id)
+      harvest_api.stop_task(task_id, harvest_id)
     else
       # do nothing just log it
     end
