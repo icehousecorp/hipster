@@ -16,7 +16,7 @@ end
 
 gem 'simple_form'
 gem 'pivotal-tracker'
-gem 'harvested'
+gem 'harvested', :git => 'git://github.com/fajarmf/harvested.git'
 
 # Gems used only for assets and not required
 # in production environments by default.

@@ -1,3 +1,12 @@
+GIT
+  remote: git://github.com/fajarmf/harvested.git
+  revision: 197293884189615c7ccaf253b6ecf889c238a119
+  specs:
+    harvested (0.6.4)
+      hashie (~> 1)
+      httparty
+      json
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -55,10 +64,6 @@ GEM
     fssm (0.2.10)
     happymapper (0.4.0)
       libxml-ruby (~> 2.0)
-    harvested (0.6.4)
-      hashie (~> 1)
-      httparty
-      json
     hashie (1.2.0)
     hike (1.2.1)
     httparty (0.10.2)
@@ -170,7 +175,7 @@ DEPENDENCIES
   bootstrap-sass (~> 2.2.2.0)
   coffee-rails (~> 3.2.1)
   compass-rails
-  harvested
+  harvested!
   jquery-rails (~> 2.2.1)
   omniauth-google-oauth2
   pg
