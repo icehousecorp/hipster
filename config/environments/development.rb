@@ -39,5 +39,7 @@ Pivotalharvested::Application.configure do
   config.action_mailer.smtp_settings = {
     :address              => "localhost",
     :port                 => 25,
+    :enable_starttls_auto => true,
+    :openssl_verify_mode  => 'none'
   }
 end
