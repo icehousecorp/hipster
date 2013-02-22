@@ -50,10 +50,10 @@ class Integration < ActiveRecord::Base
 
   def create_mapping(pivotal_user, harvest_user)
     pm = person_mappings.build
-    pm.pivotal_id = self.pivotal_project_id
+    pm.pivotal_id = pivotal_user.id
     pm.pivotal_name = pivotal_user.name
     pm.pivotal_email = pivotal_user.email
-    pm.harvest_id = self.harvest_project_id
+    pm.harvest_id = harvest_user.id
     pm.harvest_name = "#{harvest_user.try(:first_name)} #{harvest_user.try(:last_name)}"
     pm.harvest_email = harvest_user.email
     pm

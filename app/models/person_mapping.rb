@@ -11,7 +11,7 @@ class PersonMapping < ActiveRecord::Base
   validates(:harvest_id, :presence => true)
   validates :harvest_id, :uniqueness => { :scope => [:pivotal_id, :integration_id], message: 'has been mapped' }
 
-  before_create :prepare_person_mapping
+  before_create :prepare_person_mapping, :if => :require_user_retrieval
 
   def harvest_api
     @harvest_api ||= Api::HarvestClient.new(self.integration.user)
@@ -21,9 +21,13 @@ class PersonMapping < ActiveRecord::Base
     @pivotal_api ||= Api::PivotalClient.new(self.integration.user)
   end
 
+  def require_user_retrieval
+    self.pivotal_name.blank? && self.pivotal_email.blank? && self.harvest_name.blank? && self.harvest_email.blank?
+  end
+
   def prepare_person_mapping
     pivotal_users = pivotal_api.cached_users(self.integration.id, self.integration.pivotal_project_id)
-    pivotal_user = pivotal_users.select{|user| user.id == pivotal_id.to_i}.first
+    pivotal_user = pivotal_users.select{|user| user.id.to_i == pivotal_id.to_i}.first
     self.pivotal_name = pivotal_user.try(:name)
     self.pivotal_email = pivotal_user.try(:email)
     self.pivotal_id = pivotal_user.try(:id)
