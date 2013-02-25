@@ -1,11 +1,11 @@
 class Integration < ActiveRecord::Base
   belongs_to :user
-  has_many :person_mappings
+  has_many :person_mappings, :dependent => :destroy
   attr_accessible :harvest_project_id, :pivotal_project_id, :user_id
   attr_accessible :harvest_project_name, :pivotal_project_name
-  attr_accessible :project_name, :selection, :client_id
+  attr_accessible :project_name, :selection, :client_id, :mapping_ids
 
-  attr_accessor :project_name, :selection, :client_id
+  attr_accessor :project_name, :selection, :client_id, :mapping_ids
 
   #validates :harvest_project_id, :uniqueness => { :scope => :pivotal_project_id, message: 'has been mapped' }
   validates_uniqueness_of :harvest_project_id, message: 'has been mapped'
@@ -16,6 +16,7 @@ class Integration < ActiveRecord::Base
   validate :validate_pivotal_project_id, :on => :create
 
   before_create :prepare_integration
+  after_create :assign_person_mapping
 
   def harvest_api
     @harvest_api ||= Api::HarvestClient.new(self.user)
@@ -46,6 +47,14 @@ class Integration < ActiveRecord::Base
       self.harvest_project_name = harvest_api.get_harvest_project_name(self.harvest_project_id)
       self.pivotal_project_name = pivotal_api.get_pivotal_project_name(self.pivotal_project_id)
     end
+  end
+
+  def assign_person_mapping
+    self.mapping_ids.each do |mapping_id|
+      old_pm = PersonMapping.find(mapping_id)
+      new_pm = old_pm.clone_mapping_to_project(self)
+      new_pm.save
+    end if (self.selection.eql? "auto") && !self.mapping_ids.blank?
   end
 
   def create_mapping(pivotal_user, harvest_user)

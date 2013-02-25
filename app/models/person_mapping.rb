@@ -38,11 +38,89 @@ class PersonMapping < ActiveRecord::Base
     self.harvest_email = harvest_user.try(:email)
   end
 
+  def clone_mapping_to_project(integration)
+    pm = PersonMapping.new
+    new_project = PivotalTracker::Project.new
+    new_project.id = integration.pivotal_project_id
+    membership = PivotalTracker::Membership.new(:role => "Member", :name => self.pivotal_name, :email => self.pivotal_email)
+    membership = membership.assign(new_project)
+
+    pm.pivotal_name = self.pivotal_name
+    pm.pivotal_email = self.pivotal_email
+    pm.pivotal_id = membership.id
+
+    user_assignment = harvest_api.assign_user(integration.harvest_project_id, self.harvest_id)
+
+    pm.harvest_name = self.harvest_name
+    pm.harvest_email = self.harvest_email
+    pm.harvest_id = self.harvest_id
+
+    pm.integration_id = integration.id
+    pm
+  end
+
   def harvest_info
   	"#{harvest_id}-#{harvest_name} (#{harvest_email})"
   end
 
   def pivotal_info
   	"#{pivotal_id}-#{pivotal_name} (#{pivotal_email})"
+  end
+
+  def name
+    "[#{self.harvest_id}-#{self.harvest_name}] [#{self.pivotal_id}-#{self.pivotal_name}]"
+  end
+end
+
+module PivotalTracker
+  class Membership
+    include HappyMapper
+
+    class << self
+      def all(project, options={})
+        parse(Client.connection["/projects/#{project.id}/memberships"].get)
+      end
+    end
+
+    element :id, Integer
+    element :role, String
+
+    # Flattened Attributes from <person>...</person>
+    element :name, String, :deep => true
+    element :email, String, :deep => true
+    element :initials, String, :deep => true
+
+    def initialize(attributes={})
+      update_attributes(attributes)
+    end
+
+    def assign(project, options={})
+      puts self.to_xml
+      response = Client.connection["/projects/#{project.id}/memberships/"].post(self.to_xml, :content_type => 'application/xml')
+      membership = Membership.parse(response)
+      return membership
+    end
+
+    protected
+
+      def to_xml
+        builder = Nokogiri::XML::Builder.new do |xml|
+          xml.membership {
+            xml.role "#{role}"
+            xml.person {
+              xml.name "#{name}"
+              xml.email "#{email}"
+              xml.initials "#{initials}" unless initials.nil?
+            }
+          }
+        end
+        return builder.to_xml
+      end
+
+      def update_attributes(attrs)
+        attrs.each do |key, value|
+          self.send("#{key}=", value.is_a?(Array) ? value.join(',') : value )
+        end
+      end
   end
 end

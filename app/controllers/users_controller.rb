@@ -19,8 +19,11 @@ class UsersController < ApplicationController
   def validate_pivotal_token
     return true unless @user.pivotal_token_changed?
     #client = Api::PivotalClient.new(@user)
+    @current_user = @user
     pivotal_api.all_projects
-    rescue
+    rescue => e 
+      puts current_user.inspect
+      puts e.inspect
       nil
   end
 

@@ -51,7 +51,6 @@ class IntegrationsController < ApplicationController
     case activity.type
     when ActivityParam::CREATE_STORY
       task = harvest_api.create(activity.task_name, @integration.harvest_project_id, harvest_id)
-      puts task.inspect
       TaskStory.create(task_id: task.id, story_id: activity.story_id)
     when ActivityParam::START_STORY
       task_id = find_task_for_story(activity.story_id)
@@ -97,10 +96,18 @@ class IntegrationsController < ApplicationController
     render "show"
   end
 
+  def find_other_person_mappings
+    @person_mappings ||= PersonMapping.where(integration_id: @integration.id)
+    @other_person_mappings ||= PersonMapping.group([:pivotal_name, :harvest_name]).select do |record|
+        !@person_mappings.include? record
+    end
+  end
+
   # GET /integrations/new
   # GET /integrations/new.json
   def new
     @integration = Integration.new(user_id: params[:user_id])
+    find_other_person_mappings
 
     respond_to do |format|
       format.html # new.html.erb
@@ -183,10 +190,6 @@ class ActivityParam
         return FINISH_STORY
       end
     end
-  end
-
-  def user_id
-    PersonMapping.where(pivotal_name: author).first.harvest_id
   end
 
   def task_name

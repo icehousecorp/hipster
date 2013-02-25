@@ -68,6 +68,7 @@ class PersonMappingsController < ApplicationController
     safe_invoke {
       find_single_harvest_users
       find_single_pivotal_users
+      
       @person_mapping = PersonMapping.new(integration_id: params[:integration_id])
 
       respond_to do |format|
@@ -92,10 +93,10 @@ class PersonMappingsController < ApplicationController
   def create
     safe_invoke {
       @person_mapping = PersonMapping.new(params[:person_mapping])
-
+    
       respond_to do |format|
         if @person_mapping.save
-          format.html { redirect_to detail_user_integration_url(@person_mapping.integration.user, @person_mapping.integration), notice: 'Person mapping was successfully created.' }
+          format.html { redirect_to detail_user_integration_url(@integration.user, @integration), notice: 'Person mapping was successfully created.' }
           format.json { render json: @person_mapping, status: :created, location: @person_mapping }
         else
           find_single_harvest_users

@@ -4,6 +4,7 @@
     <a class="close" data-dismiss="alert" href="#">&times;</a>
   </div>
   <% end %>
+  <hr>
 <%= simple_form_for([@user, @integration]) do |f| %>
   <%= f.error_notification %>
 
@@ -12,7 +13,16 @@
       <input type="radio" checked name="integration[selection]" id="integration_selection" value="auto"> Automated Mapping</div>
       <%= f.input :client_id, as: :select, collection: @harvest_clients %>
      <%= f.input :project_name %>
-    <br><input type="radio" name="integration[selection]" id="integration_selection" value="manual"/> Manual Mapping<br/>
+    <br> <b>Team Member</b>
+     <% if @other_person_mappings.empty? %>
+<br>No person mapping record found from other project
+  <% else %>
+<% @other_person_mappings.each do |pm| %>
+  <div><input type="checkbox" name="integration[mapping_ids][]" id="integration_mapping_ids" value="<%=pm.id%>" /> <%=pm.harvest_name%> - <%=pm.pivotal_name%></div>
+<% end %>
+<% end %>
+<hr>
+    <input type="radio" name="integration[selection]" id="integration_selection" value="manual"/> Manual Mapping<br/>
     <%= f.input :harvest_project_id, as: :select, collection: @harvest_projects %>
     <%= f.input :pivotal_project_id, as: :select, collection: @pivotal_projects %>
    

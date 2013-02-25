@@ -119,7 +119,6 @@ class Api::HarvestClient
     email_message = "Failed to create new story #{task_name} on project id #{project_id}"
 
     safe_invoke Hash[:task_name=>task_name, :project_id=>project_id, :harvest_user_id=>user_id, :email_message=>email_message] do |args| 
-      puts "start create project"
       task = Harvest::Task.new
       task.name = args[:task_name]
       task = @client.tasks.create(task)
@@ -127,9 +126,14 @@ class Api::HarvestClient
       assignment.task_id = task.id
       assignment.project_id = args[:project_id]
       @client.task_assignments.create(assignment)
-      puts "inspect #{task.inspect}"
       task
     end
+  end
+
+  def assign_user(project_id, user_id)
+    user_assignment = Harvest::UserAssignment.new(:user_id => user_id, :project_id => project_id)
+    @client.user_assignments.create(user_assignment)
+    user_assignment
   end
 
   def start_task(task_id, harvest_project_id, user_id)
