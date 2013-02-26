@@ -131,9 +131,13 @@ class Api::HarvestClient
   end
 
   def assign_user(project_id, user_id)
-    user_assignment = Harvest::UserAssignment.new(:user_id => user_id, :project_id => project_id)
-    @client.user_assignments.create(user_assignment)
-    user_assignment
+    email_message = "Failed to assign harvest user #{user_id} to project #{project_id}"
+
+    safe_invoke Hash[:project_id=>project_id, :user_id=>user_id] do |args|
+      user_assignment = Harvest::UserAssignment.new(:user_id => args[:user_id], :project_id => args[:project_id])
+      @client.user_assignments.create(user_assignment)
+      user_assignment
+    end
   end
 
   def start_task(task_id, harvest_project_id, user_id)
