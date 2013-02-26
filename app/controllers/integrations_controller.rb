@@ -46,10 +46,13 @@ class IntegrationsController < ApplicationController
 
   def callback
     activity = ActivityParam.new(params)
-    harvest_id = PersonMapping.where(pivotal_name: activity.author, integration_id: @integration.id).first.harvest_id
+    harvest_user = PersonMapping.where(pivotal_name: activity.author, integration_id: @integration.id).first
+    harvest_id = harvest_user.harvest_id unless harvest_id.nil?
 
     case activity.type
     when ActivityParam::CREATE_STORY
+      harvest_id ||= harvest_api.get_project_manager_harvest_id(@integration.harvest_project_id)
+      puts "Using harvest id #{harvest_id}"
       task = harvest_api.create(activity.task_name, @integration.harvest_project_id, harvest_id)
       TaskStory.create(task_id: task.id, story_id: activity.story_id)
     when ActivityParam::START_STORY
