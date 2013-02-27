@@ -12,10 +12,13 @@
   <div class="container-narrow">
     <div class="masthead">
       <ul class="nav nav-pills pull-right">
-        <li><%= link_to "Home", root_url, class: 'btn' %></li>
+        <li><%= link_to "Home", main_app.root_url, class: 'btn' %></li>
       <% if current_user %>
-        <li><%= link_to 'Reload Data', reload_integrations_path, class: 'btn' %></li>
-        <li><%= link_to "Profile", current_user, class: 'btn' %></li>
+        <li><%= link_to 'Reload Data', main_app.reload_integrations_path, class: 'btn' %></li>
+        <li><%= link_to "Profile", main_app.user_path(current_user.id), class: 'btn' %></li>
+        <% if Object.const_defined?('Hiro') %>
+          <li><%= link_to "Hiro", '/hiro', class: 'btn' %></li>
+        <% end %>
         <li><%= link_to "Logout", '/logout', class: 'btn' %></li>
       <% else %>
         <li><%= link_to 'Login', '/auth/google_oauth2', class: 'btn' %></li>
