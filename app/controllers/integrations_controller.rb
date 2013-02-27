@@ -47,7 +47,7 @@ class IntegrationsController < ApplicationController
   def callback
     activity = ActivityParam.new(params)
     harvest_user = PersonMapping.where(pivotal_name: activity.author, integration_id: @integration.id).first
-    harvest_id = harvest_user.harvest_id unless harvest_id.nil?
+    harvest_id = harvest_user.harvest_id unless harvest_user.nil?
 
     case activity.type
     when ActivityParam::CREATE_STORY
