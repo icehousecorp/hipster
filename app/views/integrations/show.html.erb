@@ -9,13 +9,38 @@
 
   <div class="detail">
     <p>
-      <b>Harvest project</b>
+      <b>Project Name</b>
+      : <%= @integration.project_name %>
+    </p>
+
+    <p>
+      <b>Harvest Project</b>
       : <%= @integration.harvest_project_id %> - <%= @integration.harvest_project_name %>
     </p>
 
     <p>
-      <b>Pivotal project</b>
+      <b>Pivotal Project</b>
       : <%= @integration.pivotal_project_id %> - <%= @integration.pivotal_project_name %>
+    </p>
+
+    <p>
+      <b>Project Code</b>
+      : <%= @integration.harvest_project_code %>
+    </p>
+
+     <p>
+      <b>Billable</b>
+      : <%= @integration.harvest_billable %>
+    </p>
+
+     <p>
+      <b>Budget</b>
+      : <%= @integration.budget_category[@integration.harvest_budget] %>
+    </p>
+
+     <p>
+      <b>Start Iteration</b>
+      : <%= @integration.week_day_options[@integration.pivotal_start_iteration] %>
     </p>
 
     <p>
@@ -54,7 +79,7 @@
         <td><%= mapping.person.pivotal_info %></td>
         
         <td><%= link_to 'Show', mapping %></td>
-        <!--td><%= link_to 'Edit', edit_person_mapping_path(mapping) %></td-->
+        <td><%= link_to 'Edit', edit_person_mapping_path(mapping) %></td>
         <td><%= link_to 'Destroy', mapping, method: :delete, data: { confirm: 'Are you sure?' } %></td>
       </tr>
     </tbody>

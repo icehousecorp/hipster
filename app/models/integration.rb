@@ -89,6 +89,15 @@ class Integration < ActiveRecord::Base
     "#{harvest_project_name} - #{pivotal_project_name}"
   end
 
+  def budget_category
+    @budget_category ||= {"project" => "Total project hours", "project_cost" => "Total project fees", "task" => "Hours per task",
+        "person" => "Hours per person"}
+  end
+
+  def week_day_options
+    @week_day_options ||= {"0"=>"Sunday", "1"=>"Monday", "2"=>"Tuesday", "3"=>"Wednesday", "4"=>"Thursday", "5"=>"Friday", "6"=>"Saturday"}
+  end
+
   def validate_client_not_empty
       errors.add(:client_id, " is required") if (selection.eql? "auto") && client_id.blank?
   end

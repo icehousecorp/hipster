@@ -16,7 +16,7 @@
       <%= f.input :project_name %>
       <%= f.input :harvest_project_code, :label => 'Project Code' %>
       <%= f.input :harvest_billable, as: :select, :label => 'Billable' %>
-      <%= f.input :harvest_budget, as: :select, collection: [['Total project hours', 'project'], ['Total project fees', 'project_cost'], ['Hours per task', 'task'], ['Hours per person', 'person']], :label => 'Budget' %>
+      <%= f.input :harvest_budget, as: :select, collection: @integration.budget_category.invert, :label => 'Budget' %>
       <%= f.input :pivotal_start_iteration, as: :select, :label => 'Start Iteration', collection: [['Sunday','0'],['Monday','1'],['Tuesday','2'],['Wednesday','3'],['Thursday','4'],['Friday','5'],['Saturday','6']] %>
 
     <br> <b>Team Member</b>
