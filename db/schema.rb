@@ -40,7 +40,7 @@ ActiveRecord::Schema.define(:version => 20130301000548) do
     t.string   "pivotal_start_iteration"
   end
 
-  add_index "integrations", ["user_id"], :name => "index_integrations_on_user_id"
+  add_index "integrations", ["user_id"], :name => "index_projects_on_user_id"
 
   create_table "people", :force => true do |t|
     t.integer  "harvest_id"
@@ -60,7 +60,7 @@ ActiveRecord::Schema.define(:version => 20130301000548) do
     t.integer  "person_id"
   end
 
-  add_index "person_mappings", ["integration_id"], :name => "index_person_mappings_on_integration_id"
+  add_index "person_mappings", ["integration_id"], :name => "index_person_mappings_on_project_id"
   add_index "person_mappings", ["person_id"], :name => "index_person_mappings_on_person_id"
 
   create_table "task_stories", :force => true do |t|

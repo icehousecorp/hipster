@@ -4,14 +4,14 @@ class PersonMappingsController < ApplicationController
   before_filter :find_integration, except: [:show, :edit, :destroy]
 
   def find_integration
-    @integration = Integration.find(params[:integration_id])
+    @integration = Project.find(params[:integration_id])
   end
 
   def safe_invoke
     begin
       yield
     rescue *HARVEST_EXCEPTIONS
-      redirect_to detail_user_integration_path(@integration.user, @integration), notice: 'The project might have been deleted or there was an error occured in Harvest and/or Pivotal server.'
+      redirect_to detail_project_path(@integration), notice: 'The project might have been deleted or there was an error occured in Harvest and/or Pivotal server.'
     end
   end
 
@@ -37,7 +37,7 @@ class PersonMappingsController < ApplicationController
       end
       false
     end unless pivotal_users.blank?
-    redirect_to detail_user_integration_path(@integration.user, @integration)
+    redirect_to detail_project_path(@integration)
   end
 
   # GET /person_mappings
@@ -96,7 +96,7 @@ class PersonMappingsController < ApplicationController
     
       respond_to do |format|
         if @person_mapping.save
-          format.html { redirect_to detail_user_integration_url(@integration.user, @integration), notice: 'Person mapping was successfully created.' }
+          format.html { redirect_to detail_project_url(@integration), notice: 'Person mapping was successfully created.' }
           format.json { render json: @person_mapping, status: :created, location: @person_mapping }
         else
           find_single_harvest_users
@@ -137,7 +137,7 @@ class PersonMappingsController < ApplicationController
     @person_mapping.destroy
 
     respond_to do |format|
-      format.html { redirect_to detail_user_integration_url(@person_mapping.integration.user, @person_mapping.integration) }
+      format.html { redirect_to detail_project_url(@person_mapping.integration) }
       format.json { head :no_content }
     end
   end
