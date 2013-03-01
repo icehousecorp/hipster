@@ -20,13 +20,13 @@
 
     <p>
       <b>Integration</b>
-      : <%= link_to @person_mapping.integration, detail_user_integration_path( @person_mapping.integration.user, @person_mapping.integration )%>
+      : <%= link_to @person_mapping.integration, detail_project_path(@person_mapping.integration )%>
     </p>
   </div>
 
   <div class="form-submit">
     <%= link_to 'Edit', edit_person_mapping_path(@person_mapping), class: 'btn' %>
-    <%= link_to 'Back', detail_user_integration_path(@person_mapping.integration.user, @person_mapping.integration), class: 'btn' %>
+    <%= link_to 'Back', detail_project_path(@person_mapping.integration), class: 'btn' %>
   </div>
 
 </div>

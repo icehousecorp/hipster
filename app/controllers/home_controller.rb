@@ -9,7 +9,7 @@ class HomeController < ApplicationController
         current_user.save
         flash[:notice] = 'harvest setting verified'
       end
-      redirect_to user_integrations_path(current_user)
+      redirect_to projects_path
     end
   end
 
@@ -22,7 +22,7 @@ class HomeController < ApplicationController
   	auth_hash = request.env['omniauth.auth'].to_hash
   	identity = Identity.where(provider: 'google_oauth2', uid: auth_hash['uid']).first
   	if identity && identity.user_id
-      redirect_to user_integrations_path(identity.user_id)
+      redirect_to projects_path
 	  	# redirect_to user_path(identity.user_id)
   	else
   		user = User.from_googleauth(auth_hash)

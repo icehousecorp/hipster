@@ -3,9 +3,10 @@ Pivotalharvested::Application.routes.draw do
   resources :people
 
 
-  resources :integrations, only: []  do
+  resources :projects  do
     member do
       post 'callback'
+      get 'detail'
     end
     collection do
       get 'reload'
@@ -22,11 +23,6 @@ Pivotalharvested::Application.routes.draw do
   resources :users, except: [:new, :index, :create] do
     member do
       get 'confirm_harvest'
-    end
-    resources :integrations do
-      member do
-        get 'detail'
-      end
     end
   end
 
