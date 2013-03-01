@@ -1,16 +1,16 @@
-  <% if notice %>
+<% if notice %>
   <div class="alert alert-success">
     <%= notice %>
     <a class="close" data-dismiss="alert" href="#">&times;</a>
   </div>
-  <% end %>
-  <hr>
-<%= simple_form_for([@user, @integration]) do |f| %>
+<% end %>
+<hr>
+<%= simple_form_for(@integration) do |f| %>
   <%= f.error_notification %>
 
   <div class="form-inputs">
     <div valign="center">
-      <input type="radio" checked name="integration[selection]" id="integration_selection" value="auto"> Automated Mapping</div>
+      <input type="radio" checked name="project[selection]" id="project_selection" value="auto"> Automated Mapping</div>
       <br>
       <%= f.input :client_id, as: :select, collection: @harvest_clients %>
       <%= f.input :project_name %>
@@ -20,15 +20,15 @@
       <%= f.input :pivotal_start_iteration, as: :select, :label => 'Start Iteration', collection: [['Sunday','0'],['Monday','1'],['Tuesday','2'],['Wednesday','3'],['Thursday','4'],['Friday','5'],['Saturday','6']] %>
 
     <br> <b>Team Member</b>
-     <% if @people_list.empty? %>
-<br>No user found
-  <% else %>
-<% @people_list.each do |pm| %>
-  <div><input type="checkbox" name="integration[person_ids][]" id="integration_person_ids" value="<%=pm.id%>" /> <%=pm.harvest_name%></div>
-<% end %>
-<% end %>
-<hr>
-    <input type="radio" name="integration[selection]" id="integration_selection" value="manual"/> Manual Mapping<br/>
+    <% if @people_list.empty? %>
+      <br>No user found
+    <% else %>
+      <% @people_list.each do |pm| %>
+        <div><input type="checkbox" name="project[person_ids][]" id="project_person_ids" value="<%=pm.id%>" /> <%=pm.harvest_name%></div>
+      <% end %>
+    <% end %>
+    <hr>
+    <input type="radio" name="project[selection]" id="project_selection" value="manual"/> Manual Mapping<br/>
     <%= f.input :harvest_project_id, as: :select, collection: @harvest_projects %>
     <%= f.input :pivotal_project_id, as: :select, collection: @pivotal_projects %>
    
@@ -38,9 +38,9 @@
     <%= f.button :submit, :value => 'Create Project' %>
 
     <% if @integration.id %>
-      <%= link_to 'Cancel', detail_user_integration_path(@user.id, @integration.id), class: 'btn' %>
+      <%= link_to 'Cancel', detail_project_path(@integration.id), class: 'btn' %>
     <% else %>
-      <%= link_to 'Cancel', user_integrations_path(@user), class: 'btn' %>
+      <%= link_to 'Cancel', projects_path, class: 'btn' %>
     <% end %>
   </div>
 <% end %>
