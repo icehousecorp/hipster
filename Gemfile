@@ -15,7 +15,7 @@ group :development do
 end
 
 gem 'simple_form'
-gem 'pivotal-tracker'
+gem 'pivotal-tracker', :git => 'git://github.com/donihanafi/pivotal-tracker.git'
 gem 'harvested', :git => 'git://github.com/fajarmf/harvested.git'
 
 # Gems used only for assets and not required
