@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20130207080849) do
+ActiveRecord::Schema.define(:version => 20130301000548) do
 
   create_table "identities", :force => true do |t|
     t.string   "provider"
@@ -29,25 +29,39 @@ ActiveRecord::Schema.define(:version => 20130207080849) do
     t.integer  "pivotal_project_id"
     t.string   "pivotal_project_name"
     t.integer  "user_id"
-    t.datetime "created_at",           :null => false
-    t.datetime "updated_at",           :null => false
+    t.datetime "created_at",              :null => false
+    t.datetime "updated_at",              :null => false
+    t.string   "project_name"
+    t.integer  "client_id"
+    t.string   "client_name"
+    t.string   "harvest_project_code"
+    t.string   "harvest_billable"
+    t.string   "harvest_budget"
+    t.string   "pivotal_start_iteration"
   end
 
   add_index "integrations", ["user_id"], :name => "index_integrations_on_user_id"
 
-  create_table "person_mappings", :force => true do |t|
+  create_table "people", :force => true do |t|
     t.integer  "harvest_id"
     t.string   "harvest_email"
     t.string   "harvest_name"
     t.integer  "pivotal_id"
     t.string   "pivotal_email"
     t.string   "pivotal_name"
+    t.datetime "created_at",    :null => false
+    t.datetime "updated_at",    :null => false
+  end
+
+  create_table "person_mappings", :force => true do |t|
     t.integer  "integration_id"
     t.datetime "created_at",     :null => false
     t.datetime "updated_at",     :null => false
+    t.integer  "person_id"
   end
 
   add_index "person_mappings", ["integration_id"], :name => "index_person_mappings_on_integration_id"
+  add_index "person_mappings", ["person_id"], :name => "index_person_mappings_on_person_id"
 
   create_table "task_stories", :force => true do |t|
     t.integer  "task_id"

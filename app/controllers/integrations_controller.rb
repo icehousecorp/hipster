@@ -99,18 +99,15 @@ class IntegrationsController < ApplicationController
     render "show"
   end
 
-  def find_other_person_mappings
-    @person_mappings ||= PersonMapping.where(integration_id: @integration.id)
-    @other_person_mappings ||= PersonMapping.group([:pivotal_name, :harvest_name]).select do |record|
-        !@person_mappings.include? record
-    end
+  def find_people_list
+    @people_list ||= Person.all
   end
 
   # GET /integrations/new
   # GET /integrations/new.json
   def new
     @integration = Integration.new(user_id: params[:user_id])
-    find_other_person_mappings
+    find_people_list
 
     respond_to do |format|
       format.html # new.html.erb

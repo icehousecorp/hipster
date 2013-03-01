@@ -11,14 +11,20 @@
   <div class="form-inputs">
     <div valign="center">
       <input type="radio" checked name="integration[selection]" id="integration_selection" value="auto"> Automated Mapping</div>
+      <br>
       <%= f.input :client_id, as: :select, collection: @harvest_clients %>
-     <%= f.input :project_name %>
+      <%= f.input :project_name %>
+      <%= f.input :harvest_project_code, :label => 'Project Code' %>
+      <%= f.input :harvest_billable, as: :select, :label => 'Billable' %>
+      <%= f.input :harvest_budget, as: :select, collection: [['Total project hours', 'project'], ['Total project fees', 'project_cost'], ['Hours per task', 'task'], ['Hours per person', 'person']], :label => 'Budget' %>
+      <%= f.input :pivotal_start_iteration, as: :select, :label => 'Start Iteration', collection: [['Sunday','0'],['Monday','1'],['Tuesday','2'],['Wednesday','3'],['Thursday','4'],['Friday','5'],['Saturday','6']] %>
+
     <br> <b>Team Member</b>
-     <% if @other_person_mappings.empty? %>
-<br>No person mapping record found from other project
+     <% if @people_list.empty? %>
+<br>No user found
   <% else %>
-<% @other_person_mappings.each do |pm| %>
-  <div><input type="checkbox" name="integration[mapping_ids][]" id="integration_mapping_ids" value="<%=pm.id%>" /> <%=pm.harvest_name%> - <%=pm.pivotal_name%></div>
+<% @people_list.each do |pm| %>
+  <div><input type="checkbox" name="integration[person_ids][]" id="integration_person_ids" value="<%=pm.id%>" /> <%=pm.harvest_name%></div>
 <% end %>
 <% end %>
 <hr>

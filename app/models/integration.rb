@@ -1,11 +1,16 @@
 class Integration < ActiveRecord::Base
   belongs_to :user
   has_many :person_mappings, :dependent => :destroy
+  has_many :people, :through => :person_mappings
   attr_accessible :harvest_project_id, :pivotal_project_id, :user_id
   attr_accessible :harvest_project_name, :pivotal_project_name
-  attr_accessible :project_name, :selection, :client_id, :mapping_ids
+  attr_accessible :project_name, :client_id, :client_name
+  attr_accessible :harvest_project_code, :harvest_billable, :harvest_budget
+  attr_accessible :pivotal_start_iteration
 
-  attr_accessor :project_name, :selection, :client_id, :mapping_ids
+  attr_accessible :selection, :client_id, :person_ids
+
+  attr_accessor :selection, :person_ids
 
   #validates :harvest_project_id, :uniqueness => { :scope => :pivotal_project_id, message: 'has been mapped' }
   validates_uniqueness_of :harvest_project_id, message: 'has been mapped'
@@ -29,9 +34,11 @@ class Integration < ActiveRecord::Base
   def prepare_integration
     #For automated project mapping creation
     if self.selection.eql? "auto"
-      harvest_project = harvest_api.create_project(self.project_name, self.client_id)
-      pivotal_project = pivotal_api.create_project(self.project_name)
+      harvest_project = harvest_api.create_project(self)
+      pivotal_project = pivotal_api.create_project(self.project_name, self.pivotal_start_iteration)
 
+      puts "pivotal_project #{pivotal_project.inspect}"
+      puts "harvest project =  #{harvest_project.inspect}"
       if harvest_project.blank? || harvest_project.id.blank?
         errors.add(:project_name, ' Failed to create new project in Harvest')
       elsif pivotal_project.blank? || pivotal_project.id.blank?
@@ -42,6 +49,8 @@ class Integration < ActiveRecord::Base
       self.pivotal_project_id = pivotal_project.id
       self.harvest_project_name = project_name
       self.pivotal_project_name = project_name
+
+      
     #For manual project mapping creation
     else
       self.harvest_project_name = harvest_api.get_harvest_project_name(self.harvest_project_id)
@@ -50,11 +59,19 @@ class Integration < ActiveRecord::Base
   end
 
   def assign_person_mapping
-    self.mapping_ids.each do |mapping_id|
-      old_pm = PersonMapping.find(mapping_id)
-      new_pm = old_pm.clone_mapping_to_project(self)
-      new_pm.save
-    end if (self.selection.eql? "auto") && !self.mapping_ids.blank?
+    self.person_ids.each do |mapping_id|
+      person = Person.find(mapping_id)
+
+      membership = PivotalTracker::Membership.new(:role => "Member", :name => person.pivotal_name, :email => person.pivotal_email)
+      pivotal_project = PivotalTracker::Project.new
+      pivotal_project.id = self.pivotal_project_id
+      membership = membership.assign(pivotal_project)
+
+      user_assignment = harvest_api.assign_user(self.harvest_project_id, person.harvest_id)
+
+      pm = PersonMapping.new(person_id: person.id, integration_id: self.id)
+      pm.save
+    end if (self.selection.eql? "auto") && !self.person_ids.blank?
   end
 
   def create_mapping(pivotal_user, harvest_user)
