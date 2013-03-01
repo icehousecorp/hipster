@@ -4,7 +4,7 @@ class PersonMappingsController < ApplicationController
   before_filter :find_integration, except: [:show, :edit, :destroy]
 
   def find_integration
-    @integration = Project.find(params[:integration_id])
+    @integration = Project.find(params[:project_id])
   end
 
   def safe_invoke
@@ -69,7 +69,7 @@ class PersonMappingsController < ApplicationController
       find_single_harvest_users
       find_single_pivotal_users
       
-      @person_mapping = PersonMapping.new(integration_id: params[:integration_id])
+      @person_mapping = PersonMapping.new(integration_id: params[:project_id])
 
       respond_to do |format|
         format.html # new.html.erb

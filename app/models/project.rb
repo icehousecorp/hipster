@@ -2,7 +2,7 @@ class Project < ActiveRecord::Base
   set_table_name 'integrations'
 
   belongs_to :user
-  has_many :person_mappings, :dependent => :destroy
+  has_many :person_mappings, :dependent => :destroy, foreign_key: :integration_id
   has_many :people, :through => :person_mappings
   attr_accessible :harvest_project_id, :pivotal_project_id, :user_id
   attr_accessible :harvest_project_name, :pivotal_project_name
@@ -26,21 +26,16 @@ class Project < ActiveRecord::Base
   after_create :assign_person_mapping
 
   def harvest_api
-    p "Harvest API #{self.user}"
     @harvest_api ||= Api::HarvestClient.new(self.user)
   end
 
   def pivotal_api
-    p "Pivotal API #{self.user}"
     @pivotal_api ||= Api::PivotalClient.new(self.user)
   end
 
   def prepare_integration
     #For automated project mapping creation
     if self.selection.eql? "auto"
-      p "Prepare integration"
-      p self
-
       harvest_project = harvest_api.create_project(self)
       pivotal_project = pivotal_api.create_project(self.project_name, self.pivotal_start_iteration)
 

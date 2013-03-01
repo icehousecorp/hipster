@@ -1,6 +1,6 @@
 class Person < ActiveRecord::Base
-	has_many :person_mappings, :dependent => :destroy
-	has_many :integrations, :through => :person_mappings
+	has_many :person_mappings, :dependent => :destroy, foreign_key: :integration_id
+	has_many :projects, :through => :person_mappings
 
   	attr_accessible :harvest_email, :harvest_id, :harvest_name, :pivotal_email, :pivotal_id, :pivotal_name
 
