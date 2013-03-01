@@ -1,5 +1,8 @@
 Pivotalharvested::Application.routes.draw do
 
+  resources :people
+
+
   resources :integrations, only: []  do
     member do
       post 'callback'

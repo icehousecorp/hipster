@@ -1,0 +1,33 @@
+<h1>Listing people</h1>
+
+<table>
+  <tr>
+    <th>Harvest</th>
+    <th>Harvest email</th>
+    <th>Harvest name</th>
+    <th>Pivotal</th>
+    <th>Pivotal email</th>
+    <th>Pivotal name</th>
+    <th></th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @people.each do |person| %>
+  <tr>
+    <td><%= person.harvest_id %></td>
+    <td><%= person.harvest_email %></td>
+    <td><%= person.harvest_name %></td>
+    <td><%= person.pivotal_id %></td>
+    <td><%= person.pivotal_email %></td>
+    <td><%= person.pivotal_name %></td>
+    <td><%= link_to 'Show', person %></td>
+    <td><%= link_to 'Edit', edit_person_path(person) %></td>
+    <td><%= link_to 'Destroy', person, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New Person', new_person_path %>

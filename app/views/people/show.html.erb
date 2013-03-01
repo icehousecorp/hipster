@@ -1,0 +1,35 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Harvest:</b>
+  <%= @person.harvest_id %>
+</p>
+
+<p>
+  <b>Harvest email:</b>
+  <%= @person.harvest_email %>
+</p>
+
+<p>
+  <b>Harvest name:</b>
+  <%= @person.harvest_name %>
+</p>
+
+<p>
+  <b>Pivotal:</b>
+  <%= @person.pivotal_id %>
+</p>
+
+<p>
+  <b>Pivotal email:</b>
+  <%= @person.pivotal_email %>
+</p>
+
+<p>
+  <b>Pivotal name:</b>
+  <%= @person.pivotal_name %>
+</p>
+
+
+<%= link_to 'Edit', edit_person_path(@person) %> |
+<%= link_to 'Back', people_path %>

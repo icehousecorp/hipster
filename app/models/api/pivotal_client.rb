@@ -32,8 +32,8 @@ class Api::PivotalClient
 
   end
 
-  def create_project(project_name)
-    project = PivotalTracker::Project.new(:name => project_name)
+  def create_project(project_name, pivotal_start_iteration)
+    project = PivotalTracker::Project.new(:name => project_name, :week_start_day => pivotal_start_iteration)
     project = project.create
   end
 

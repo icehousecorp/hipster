@@ -1,0 +1,16 @@
+<%= simple_form_for(@person) do |f| %>
+  <%= f.error_notification %>
+
+  <div class="form-inputs">
+    <%= f.input :harvest_id %>
+    <%= f.input :harvest_email %>
+    <%= f.input :harvest_name %>
+    <%= f.input :pivotal_id %>
+    <%= f.input :pivotal_email %>
+    <%= f.input :pivotal_name %>
+  </div>
+
+  <div class="form-actions">
+    <%= f.button :submit %>
+  </div>
+<% end %>

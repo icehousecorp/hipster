@@ -47,15 +47,15 @@
       </tr>
     </thead>
 
-  <% @person_mappings.each do |person_mapping| %>
+  <% @person_mappings.each do |mapping| %>
     <tbody>
       <tr>
-        <td><%= person_mapping.harvest_info %></td>
-        <td><%= person_mapping.pivotal_info %></td>
-        <!--td><%= person_mapping.integration %></td-->
-        <td><%= link_to 'Show', person_mapping %></td>
-        <td><%= link_to 'Edit', edit_person_mapping_path(person_mapping) %></td>
-        <td><%= link_to 'Destroy', person_mapping, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+        <td><%= mapping.person.harvest_info %></td>
+        <td><%= mapping.person.pivotal_info %></td>
+        
+        <td><%= link_to 'Show', mapping %></td>
+        <!--td><%= link_to 'Edit', edit_person_mapping_path(mapping) %></td-->
+        <td><%= link_to 'Destroy', mapping, method: :delete, data: { confirm: 'Are you sure?' } %></td>
       </tr>
     </tbody>
   <% end %>
