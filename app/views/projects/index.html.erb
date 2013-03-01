@@ -22,14 +22,14 @@
         <td><%= integration.harvest_project_id %> - <%= integration.harvest_project_name %></td>
         <td><%= integration.pivotal_project_id %> - <%= integration.pivotal_project_name %></td>
         <td><%= integration.user %></td>
-        <td><%= link_to 'Show', detail_user_integration_path(@user.id, integration.id) if integration.user.id==@user.id %></td>
-        <td><%= link_to 'Edit', edit_user_integration_path(@user.id, integration.id) if integration.user.id==@user.id %></td>
-        <td><%= link_to 'Destroy', user_integration_path(@user.id, integration.id), method: :delete, data: { confirm: 'Are you sure?' } if integration.user.id==@user.id %></td>
+        <td><%= link_to 'Show', detail_project_path(integration.id) if integration.user.id==@user.id %></td>
+        <td><%= link_to 'Edit', edit_project_path(integration.id) if integration.user.id==@user.id %></td>
+        <td><%= link_to 'Destroy', project_path(integration.id), method: :delete, data: { confirm: 'Are you sure?' } if integration.user.id==@user.id %></td>
       </tr>
       </tbody>
   <% end %>
   </table>
 
   <% end %>
-  <%= link_to 'New Project', new_user_integration_path(@user), class: 'btn' %>
+  <%= link_to 'New Project', new_project_path, class: 'btn' %>
 </div>

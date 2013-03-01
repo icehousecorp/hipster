@@ -12,9 +12,9 @@
     <%= f.button :submit %>
 
     <% if @person_mapping.id %>
-      <%= link_to 'Cancel', detail_user_integration_path(@person_mapping.integration.user, @person_mapping.integration), class: 'btn' %>
+      <%= link_to 'Cancel', detail_project_path(@person_mapping.integration), class: 'btn' %>
     <% else %>
-      <%= link_to 'Cancel', detail_user_integration_path(@integration.user, @integration), class: 'btn' %>
+      <%= link_to 'Cancel', detail_project_path(@integration), class: 'btn' %>
     <% end %>
   </div>
 <% end %>

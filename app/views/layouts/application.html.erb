@@ -14,7 +14,7 @@
       <ul class="nav nav-pills pull-right">
         <li><%= link_to "Home", root_url, class: 'btn' %></li>
       <% if current_user %>
-        <li><%= link_to 'Reload Data', reload_integrations_path, class: 'btn' %></li>
+        <li><%= link_to 'Reload Data', reload_projects_path, class: 'btn' %></li>
         <li><%= link_to "Profile", current_user, class: 'btn' %></li>
         <li><%= link_to "Logout", '/logout', class: 'btn' %></li>
       <% else %>

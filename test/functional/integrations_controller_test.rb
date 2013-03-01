@@ -17,11 +17,11 @@ class IntegrationsControllerTest < ActionController::TestCase
   end
 
   test "should create integration" do
-    assert_difference('Integration.count') do
+    assert_difference('Project.count') do
       post :create, integration: { harvest_project_id: @integration.harvest_project_id, pivotal_project_id: @integration.pivotal_project_id }
     end
 
-    assert_redirected_to integration_path(assigns(:integration))
+    assert_redirected_to project_path(assigns(:integration))
   end
 
   test "should show integration" do
@@ -36,14 +36,14 @@ class IntegrationsControllerTest < ActionController::TestCase
 
   test "should update integration" do
     put :update, id: @integration, integration: { harvest_project_id: @integration.harvest_project_id, pivotal_project_id: @integration.pivotal_project_id }
-    assert_redirected_to integration_path(assigns(:integration))
+    assert_redirected_to project_path(assigns(:integration))
   end
 
   test "should destroy integration" do
-    assert_difference('Integration.count', -1) do
+    assert_difference('Project.count', -1) do
       delete :destroy, id: @integration
     end
 
-    assert_redirected_to integrations_path
+    assert_redirected_to projects_path
   end
 end

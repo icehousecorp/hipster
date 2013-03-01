@@ -1,11 +1,11 @@
-class IntegrationsController < ApplicationController
+class ProjectsController < ApplicationController
   CACHE_PERIODE = 3.minutes
   before_filter :find_user, except: [:callback, :reload]
   before_filter :initialize_callback, only: [:callback]
   before_filter :fetch_projects, :fetch_clients, only: [:new , :edit]
 
   def find_user
-    @user = User.find(params[:user_id])
+    @user = current_user
     if @user.harvest_secret.blank? || @user.harvest_subdomain.blank? || @user.harvest_identifier.blank? || @user.pivotal_token.blank?
       redirect_to edit_user_path(@user), notice: "Incomplete user profile"
     end
@@ -23,10 +23,10 @@ class IntegrationsController < ApplicationController
 
   def fetch_projects
     @harvest_projects ||= harvest_api.cached_projects.select do |project_entry|
-          Integration.where(harvest_project_id: project_entry.id).first.nil?
+          Project.where(harvest_project_id: project_entry.id).first.nil?
       end
     @pivotal_projects ||= pivotal_api.cached_projects.select do |project_entry|
-          Integration.where(pivotal_project_id: project_entry.id).first.nil?
+          Project.where(pivotal_project_id: project_entry.id).first.nil?
       end
   end
 
@@ -40,7 +40,7 @@ class IntegrationsController < ApplicationController
   end
 
   def initialize_callback
-    @integration = Integration.find(params[:id])
+    @integration = Project.find(params[:id])
     @current_user = @integration.user
   end
 
@@ -72,7 +72,7 @@ class IntegrationsController < ApplicationController
   # GET /integrations
   # GET /integrations.json
   def index
-    @integrations = Integration.all
+    @integrations = Project.all
 
     respond_to do |format|
       format.html # index.html.erb
@@ -83,7 +83,7 @@ class IntegrationsController < ApplicationController
   # GET /integrations/1
   # GET /integrations/1.json
   def show
-    @integration = Integration.find(params[:id])
+    @integration = Project.find(params[:id])
     # @person_mappings = PersonMapping.where(integration_id: params[:id])
 
     # respond_to do |format|
@@ -94,7 +94,7 @@ class IntegrationsController < ApplicationController
   end
 
   def detail
-    @integration = Integration.find(params[:id])
+    @integration = Project.find(params[:id])
     @person_mappings = PersonMapping.where(integration_id: params[:id])
     render "show"
   end
@@ -106,7 +106,7 @@ class IntegrationsController < ApplicationController
   # GET /integrations/new
   # GET /integrations/new.json
   def new
-    @integration = Integration.new(user_id: params[:user_id])
+    @integration = Project.new(user_id: current_user.id)
     find_people_list
 
     respond_to do |format|
@@ -117,18 +117,19 @@ class IntegrationsController < ApplicationController
 
   # GET /integrations/1/edit
   def edit
-    @integration = Integration.find(params[:id])
+    @integration = Project.find(params[:id])
   end
 
   # POST /integrations
   # POST /integrations.json
   def create
-    @integration = Integration.new(params[:integration])
+    @integration = Project.new(params[:project])
     if @integration.save
-      redirect_to user_integration_path(@user, @integration), notice: 'Integration was successfully created.'
+      redirect_to project_path(@integration), notice: 'Integration was successfully created.'
     else
       fetch_projects
       fetch_clients
+      find_people_list
       render action: "new"
     end
   end
@@ -136,10 +137,10 @@ class IntegrationsController < ApplicationController
   # PUT /integrations/1
   # PUT /integrations/1.json
   def update
-    @integration = Integration.find(params[:id])
+    @integration = Project.find(params[:id])
 
     if @integration.update_attributes(integration_param)
-      redirect_to user_integration_path(@user, @integration), notice: 'Integration was successfully updated.'
+      redirect_to project_path(@integration), notice: 'Integration was successfully updated.'
     else
       fetch_projects
       render action: "edit"
@@ -149,11 +150,11 @@ class IntegrationsController < ApplicationController
   # DELETE /integrations/1
   # DELETE /integrations/1.json
   def destroy
-    @integration = Integration.find(params[:id])
+    @integration = Project.find(params[:id])
     @integration.destroy
 
     respond_to do |format|
-      format.html { redirect_to user_integrations_url(@integration.user) }
+      format.html { redirect_to projects_url }
       format.json { head :no_content }
     end
   end
