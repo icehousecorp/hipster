@@ -2,15 +2,38 @@
   <%= f.error_notification %>
 
   <div class="form-inputs">
-    <%= f.input :harvest_id %>
     <%= f.input :harvest_email %>
     <%= f.input :harvest_name %>
-    <%= f.input :pivotal_id %>
     <%= f.input :pivotal_email %>
     <%= f.input :pivotal_name %>
   </div>
-
+    <%= hidden_field_tag 'person[harvest_user_email]' %>
+    <%= hidden_field_tag 'person[harvest_user_password]' %>
+  <div id='myModal' class='modal hide fade' tabindex='-1' role='dialog' aria-hidden='true'>
+    <div class='modal-header'>
+      Authentication to Harvest
+    </div>
+    <div class='modal-body'>
+      Username or email: <br/>
+      <input type='text' id='user_harvest_name' name='user_harvest'></br/>
+      Password <br/>
+      <input type='password' id='user_harvest_password' name='user_password'><br/>
+      <button class='btn btn-primary' id='create-user'>Log in</button>
+    </div>
+  </div>
   <div class="form-actions">
-    <%= f.button :submit %>
+    <%= f.button :submit, {:'data-toggle' => 'modal',:'data-target' =>'#myModal'} %>
+    <%= link_to 'Cancel', people_path, class: 'btn' %>
   </div>
 <% end %>
+
+<script>
+  $(function() {
+    $('#create-user').click(function() {
+      email = $('#user_harvest_name').val();
+      password = $('#user_harvest_password').val();
+      $('#person_harvest_user_email').val(email);
+      $('#person_harvest_user_password').val(password);
+    });
+  })
+</script>

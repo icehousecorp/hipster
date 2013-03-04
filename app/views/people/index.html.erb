@@ -1,17 +1,20 @@
+<div class='row-fluid'>
 <h1>Listing people</h1>
 
-<table>
-  <tr>
-    <th>Harvest</th>
-    <th>Harvest email</th>
-    <th>Harvest name</th>
-    <th>Pivotal</th>
-    <th>Pivotal email</th>
-    <th>Pivotal name</th>
-    <th></th>
-    <th></th>
-    <th></th>
-  </tr>
+<table class='table'>
+  <thead>
+    <tr>
+      <th>Harvest</th>
+      <th>Harvest email</th>
+      <th>Harvest name</th>
+      <th>Pivotal</th>
+      <th>Pivotal email</th>
+      <th>Pivotal name</th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
 
 <% @people.each do |person| %>
   <tr>
@@ -30,4 +33,5 @@
 
 <br />
 
-<%= link_to 'New Person', new_person_path %>
+<%= link_to 'New Person', new_person_path, class: 'btn' %>
+</div>

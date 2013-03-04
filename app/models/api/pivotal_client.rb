@@ -28,10 +28,6 @@ class Api::PivotalClient
     # result
   end
 
-  def assign_user(name, email, project_id)
-
-  end
-
   def create_project(project_name, pivotal_start_iteration)
     project = PivotalTracker::Project.new(:name => project_name, :week_start_day => pivotal_start_iteration)
     project = project.create

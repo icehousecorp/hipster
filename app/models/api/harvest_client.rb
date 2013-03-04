@@ -96,17 +96,23 @@ class Api::HarvestClient
 
   def get_project_manager_harvest_id(project_id)
     Rails.cache.fetch('harvest_manager_#{project_id}', expires_in: CACHE_PERIODE) do
-      pm_assignments = @client.user_assignments.all(project_id).select do |asg|
-        asg.is_project_manager?
-      end
+      safe_invoke Hash[:project_id] do |args| 
+        pm_assignments = @client.user_assignments.all(args[:project_id]).select do |asg|
+          asg.is_project_manager?
+        end
 
-      pm_assignments.first.user_id unless pm_assignments.blank?
+        pm_assignments.first.user_id unless pm_assignments.blank?
+      end
     end 
   end
 
   def get_harvest_project_name(pid)
     p = cached_projects.select{|project| project.id.to_i == pid.to_i}.first
     p.name if !p.blank?
+  end
+
+  def get_harvest_project(id)
+    safe_invoke [] { @client.projects.find(id) }
   end
 
   def get_harvest_user_by_email(integration_id, project_id, email_address)

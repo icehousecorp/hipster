@@ -38,9 +38,9 @@ class PeopleController < ApplicationController
   end
 
   # POST /people
-  # POST /people.json
+  # POST /people.json t
   def create
-    @person = Person.new(params[:person])
+    @person = Person.new(params[:person].merge(harvest_sub_domain: current_user.harvest_subdomain))
 
     respond_to do |format|
       if @person.save

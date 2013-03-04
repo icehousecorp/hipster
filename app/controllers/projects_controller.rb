@@ -123,6 +123,7 @@ class ProjectsController < ApplicationController
   # POST /integrations
   # POST /integrations.json
   def create
+    p params[:project]
     @integration = Project.new(params[:project])
     if @integration.save
       redirect_to project_path(@integration), notice: 'Integration was successfully created.'
