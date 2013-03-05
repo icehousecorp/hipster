@@ -7,8 +7,10 @@ class Person < ActiveRecord::Base
   attr_accessible :harvest_user_email, :harvest_user_password, :harvest_sub_domain
 
   validates :harvest_email, :presence => true
-  validates :pivotal_email, :presence =>true
-  validate :harvest_name_validation
+  validates :pivotal_email, :presence => true
+  validates :harvest_name, :presence =>true
+  validates_format_of :harvest_email, :with => /\A[^@]+@([^@\.]+\.)+[^@\.]+\z/
+  validates_format_of :pivotal_email, :with => /\A[^@]+@([^@\.]+\.)+[^@\.]+\z/
 
   before_create :prepare_integration
 
@@ -16,11 +18,13 @@ class Person < ActiveRecord::Base
     @client ||= Harvest.client(self.harvest_sub_domain, self.harvest_user_email, self.harvest_user_password)
   end
   def prepare_integration
-    split_name = self.harvest_name.split(' ')
-    first_name = split_name[0]
-    last_name =last_name(split_name)
-    new_user = harvest_client.users.create(first_name: first_name, last_name: last_name,email: self.harvest_email)
-    self.harvest_id = new_user.id
+    if self.harvest_id.blank?
+      split_name = self.harvest_name.split(' ')
+      first_name = split_name[0]
+      last_name =last_name(split_name)
+      new_user = harvest_client.users.create(first_name: first_name, last_name: last_name,email: self.harvest_email)
+      self.harvest_id = new_user.id
+    end
   end
 
   def last_name(split_name)
@@ -29,6 +33,8 @@ class Person < ActiveRecord::Base
       (1..split_name.size-1).each do |index|
         last_name = last_name + split_name[index].gsub(' ','')
       end
+    else
+      last_name = split_name[0]
     end
     last_name
   end
@@ -43,11 +49,5 @@ class Person < ActiveRecord::Base
   def name
     "[#{self.harvest_id}-#{self.harvest_name}] [#{self.pivotal_id}-#{self.pivotal_name}]"
   end
-
-  def harvest_name_validation
-    full_name = self.harvest_name.split(' ')
-    if full_name.length < 2
-      errors.add(:harvest_name, "should have last name")
-    end
-  end
+  
 end
