@@ -15,6 +15,7 @@ class Person < ActiveRecord::Base
   def harvest_client
     @client ||= Harvest.client(self.harvest_sub_domain, self.harvest_user_email, self.harvest_user_password)
   end
+  
   def prepare_integration
     split_name = self.harvest_name.split(' ')
     first_name = split_name[0]
@@ -37,7 +38,7 @@ class Person < ActiveRecord::Base
   end
 
   def pivotal_info
-  	"#{pivotal_id}-#{pivotal_name} (#{pivotal_email})"
+  	"#{pivotal_name} (#{pivotal_email})"
   end
 
   def name

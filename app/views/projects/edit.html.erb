@@ -1,4 +1,41 @@
 <div class="row-fluid">
-  <h2>Editing project</h2>
-  <%= render 'form' %>
+  <h2>Assign Member</h2>
+
+<%= simple_form_for(@project) do |f| %>
+  <%= f.error_notification %>
+
+  <div class="detail">
+    <p>
+      <b>Project Name</b>
+      : <%= @project.project_name %>
+    </p>
+
+    <p>
+      <b>Harvest Project</b>
+      : <%= @project.harvest_project_id %> - <%= @project.harvest_project_name %>
+    </p>
+
+    <p>
+      <b>Pivotal Project</b>
+      : <%= @project.pivotal_project_id %> - <%= @project.pivotal_project_name %>
+    </p>
+  </div>
+
+  <div class="form-inputs">
+  <% if @people_list.empty? %>
+      <br>No user found
+    <% else %>
+      <% @people_list.each do |pm| %>
+        <div><input type="checkbox" name="project[person_ids][]" id="project_person_ids" value="<%=pm.id%>" /> <%=pm.harvest_name%></div>
+      <% end %>
+    <% end %>
+    
+  </div>
+
+  <div class="form-submit">
+    <%= f.button :submit, :label => 'Assign' %>
+
+    <%= link_to 'Cancel', detail_project_path(@project), class: 'btn' %>
+  </div>
+<% end %>
 </div>

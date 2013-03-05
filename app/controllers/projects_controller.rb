@@ -2,11 +2,10 @@ class ProjectsController < ApplicationController
   CACHE_PERIODE = 3.minutes
   before_filter :find_user, except: [:callback, :reload]
   before_filter :initialize_callback, only: [:callback]
-  before_filter :fetch_projects, :fetch_clients, only: [:new , :edit]
 
   def find_user
     @user = current_user
-    if @user.harvest_secret.blank? || @user.harvest_subdomain.blank? || @user.harvest_identifier.blank? || @user.pivotal_token.blank?
+    if @user.nil? || @user.harvest_secret.blank? || @user.harvest_subdomain.blank? || @user.harvest_identifier.blank? || @user.pivotal_token.blank?
       redirect_to edit_user_path(@user), notice: "Incomplete user profile"
     end
     @user
@@ -40,24 +39,24 @@ class ProjectsController < ApplicationController
   end
 
   def initialize_callback
-    @integration = Project.find(params[:id])
-    @current_user = @integration.user
+    @project = Project.find(params[:id])
+    @current_user = @project.user
   end
 
   def callback
     activity = ActivityParam.new(params)
-    harvest_user = PersonMapping.where(pivotal_name: activity.author, integration_id: @integration.id).first
+    harvest_user = PersonMapping.where(pivotal_name: activity.author, integration_id: @project.id).first
     harvest_id = harvest_user.harvest_id unless harvest_user.nil?
 
     case activity.type
     when ActivityParam::CREATE_STORY
-      harvest_id ||= harvest_api.get_project_manager_harvest_id(@integration.harvest_project_id)
+      harvest_id ||= harvest_api.get_project_manager_harvest_id(@project.harvest_project_id)
       puts "Using harvest id #{harvest_id}"
-      task = harvest_api.create(activity.task_name, @integration.harvest_project_id, harvest_id)
+      task = harvest_api.create(activity.task_name, @project.harvest_project_id, harvest_id)
       TaskStory.create(task_id: task.id, story_id: activity.story_id)
     when ActivityParam::START_STORY
       task_id = find_task_for_story(activity.story_id)
-      harvest_api.start_task(task_id, @integration.harvest_project_id, harvest_id)
+      harvest_api.start_task(task_id, @project.harvest_project_id, harvest_id)
     when ActivityParam::FINISH_STORY
       task_id = find_task_for_story(activity.story_id)
       harvest_api.stop_task(task_id, harvest_id)
@@ -69,33 +68,27 @@ class ProjectsController < ApplicationController
     head :no_content
   end
 
-  # GET /integrations
-  # GET /integrations.json
+  # GET /projects
+  # GET /projects.json
   def index
-    @integrations = Project.all
+    @projects = Project.all
 
     respond_to do |format|
       format.html # index.html.erb
-      format.json { render json: @integrations }
+      format.json { render json: @projects }
     end
   end
 
-  # GET /integrations/1
-  # GET /integrations/1.json
+  # GET /projects/1
+  # GET /projects/1.json
   def show
-    @integration = Project.find(params[:id])
-    # @person_mappings = PersonMapping.where(integration_id: params[:id])
-
-    # respond_to do |format|
-      render :template => "layouts/webhook", :layout => nil
-      # format.html # show.html.erb
-      # format.json { render json: @integration }
-    # end
+    @project = Project.find(params[:id])
+    
+    render :template => "layouts/webhook", :layout => nil
   end
 
   def detail
-    @integration = Project.find(params[:id])
-    @person_mappings = PersonMapping.where(integration_id: params[:id])
+    @project = Project.find(params[:id])
     render "show"
   end
 
@@ -103,56 +96,73 @@ class ProjectsController < ApplicationController
     @people_list ||= Person.all
   end
 
-  # GET /integrations/new
-  # GET /integrations/new.json
+  # GET /projects/new
+  # GET /projects/new.json
   def new
-    @integration = Project.new(user_id: current_user.id)
+    @project = Project.new(user_id: current_user.id)
+    find_people_list
+    fetch_clients
+
+    respond_to do |format|
+      format.html # new.html.erb
+      format.json { render json: @project }
+    end
+  end
+
+  def edit
+    @project = Project.find(params[:id])
     find_people_list
 
     respond_to do |format|
       format.html # new.html.erb
-      format.json { render json: @integration }
+      format.json { render json: @project }
     end
   end
 
-  # GET /integrations/1/edit
-  def edit
-    @integration = Project.find(params[:id])
+  # GET /projects/new_link
+  # GET /projects/new_link.json
+  def new_link
+    @project = Project.new(user_id: current_user.id)
+    fetch_projects
+
+    respond_to do |format|
+      format.html # new.html.erb
+      format.json { render json: @project }
+    end
   end
 
-  # POST /integrations
-  # POST /integrations.json
+  # POST /projects
+  # POST /projects.json
   def create
-    p params[:project]
-    @integration = Project.new(params[:project])
-    if @integration.save
-      redirect_to project_path(@integration), notice: 'Integration was successfully created.'
+    @project = Project.new(params[:project])
+    if @project.save
+      redirect_to project_path(@project), notice: 'Project had been created successfully.'
     else
-      fetch_projects
-      fetch_clients
       find_people_list
+      fetch_clients
       render action: "new"
     end
   end
 
-  # PUT /integrations/1
-  # PUT /integrations/1.json
+   # POST /projects
+  # POST /projects.json
   def update
-    @integration = Project.find(params[:id])
+    @project = Project.find(params[:id])
+    @project.person_ids = params[:project][:person_ids]
 
-    if @integration.update_attributes(integration_param)
-      redirect_to project_path(@integration), notice: 'Integration was successfully updated.'
+    if @project.save
+      redirect_to detail_project_path(@project), notice: 'Project had been updated successfully.'
     else
-      fetch_projects
+      find_people_list
       render action: "edit"
     end
   end
 
-  # DELETE /integrations/1
-  # DELETE /integrations/1.json
+  # DELETE /projects/1
+  # DELETE /projects/1.json
   def destroy
-    @integration = Project.find(params[:id])
-    @integration.destroy
+    @project = Project.find(params[:id])
+    @project.destroy
 
     respond_to do |format|
       format.html { redirect_to projects_url }
