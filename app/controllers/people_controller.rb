@@ -51,6 +51,11 @@ class PeopleController < ApplicationController
         format.json { render json: @person.errors, status: :unprocessable_entity }
       end
     end
+  rescue Exception => e
+    regex = /"message":"(.*)"}/
+    message = e.message.match(regex)
+    @person.errors.add(:harvest_email,message[1])
+    render action:'new'
   end
 
   # PUT /people/1

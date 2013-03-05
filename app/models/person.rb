@@ -9,6 +9,8 @@ class Person < ActiveRecord::Base
   validates :harvest_email, :presence => true
   validates :pivotal_email, :presence =>true
   validate :harvest_name_validation
+  validates_format_of :harvest_email, :with => /\A[^@]+@([^@\.]+\.)+[^@\.]+\z/
+  validates_format_of :pivotal_email, :with => /\A[^@]+@([^@\.]+\.)+[^@\.]+\z/
 
   before_create :prepare_integration
 

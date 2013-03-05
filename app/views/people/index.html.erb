@@ -4,10 +4,9 @@
 <table class='table'>
   <thead>
     <tr>
-      <th>Harvest</th>
+      <th>Harvest id</th>
       <th>Harvest email</th>
       <th>Harvest name</th>
-      <th>Pivotal</th>
       <th>Pivotal email</th>
       <th>Pivotal name</th>
       <th></th>
@@ -21,11 +20,10 @@
     <td><%= person.harvest_id %></td>
     <td><%= person.harvest_email %></td>
     <td><%= person.harvest_name %></td>
-    <td><%= person.pivotal_id %></td>
     <td><%= person.pivotal_email %></td>
     <td><%= person.pivotal_name %></td>
     <td><%= link_to 'Show', person %></td>
-    <td><%= link_to 'Edit', edit_person_path(person) %></td>
+    <!--<td><%= link_to 'Edit', edit_person_path(person) %></td> -->
     <td><%= link_to 'Destroy', person, method: :delete, data: { confirm: 'Are you sure?' } %></td>
   </tr>
 <% end %>
