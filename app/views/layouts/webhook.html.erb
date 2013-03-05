@@ -12,10 +12,10 @@
     <div class="masthead">
       <ul class="nav nav-pills pull-right">
         <li class="webhook-callback"><strong>Copy this url into Web Hook URL bellow: </strong><code>
-          <%= if callback_project_url(@integration).include? "hipster.icehousecorp.com"
-                callback_project_url(@integration).sub("hipster.icehousecorp.com", "hipster.icehousecorp.com:8000")
+          <%= if callback_project_url(@project).include? "hipster.icehousecorp.com"
+                callback_project_url(@project).sub("hipster.icehousecorp.com", "hipster.icehousecorp.com:8000")
               else
-                callback_project_url(@integration)
+                callback_project_url(@project)
               end
           %>
 
@@ -25,7 +25,7 @@
       <h3><%= image_tag("logo.png", alt: "Logo", class: "logo") %> <b>Hipster</b> </h3>
     </div>
 
-    <iframe src="https://www.pivotaltracker.com/projects/<%= @integration.pivotal_project_id %>/integrations#webhook_settings"></iframe>
+    <iframe src="https://www.pivotaltracker.com/projects/<%= @project.pivotal_project_id %>/integrations#webhook_settings"></iframe>
 
 </body>
 </html>

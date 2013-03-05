@@ -7,5 +7,6 @@ class AddItemsToIntegration < ActiveRecord::Migration
     add_column :integrations, :harvest_billable, :string
     add_column :integrations, :harvest_budget, :string
     add_column :integrations, :pivotal_start_iteration, :string
+    add_column :integrations, :pivotal_start_date, :string
   end
 end

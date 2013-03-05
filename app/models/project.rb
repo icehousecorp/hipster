@@ -8,22 +8,26 @@ class Project < ActiveRecord::Base
   attr_accessible :harvest_project_name, :pivotal_project_name
   attr_accessible :project_name, :client_id, :client_name
   attr_accessible :harvest_project_code, :harvest_billable, :harvest_budget
-  attr_accessible :pivotal_start_iteration
+  attr_accessible :pivotal_start_iteration, :pivotal_start_date
 
-  attr_accessible :selection, :client_id, :person_ids
+  attr_accessible :client_id, :person_ids
+  
+  attr_accessor :person_ids
 
-  attr_accessor :selection, :person_ids
+  validates :harvest_budget, :format => { :with => /^\d+??(?:\.\d{0,2})?$/ }, :numericality => {:greater_than => 0}
 
-  #validates :harvest_project_id, :uniqueness => { :scope => :pivotal_project_id, message: 'has been mapped' }
-  validates_uniqueness_of :harvest_project_id, message: 'has been mapped'
-  validates_uniqueness_of :pivotal_project_id, message: 'has been mapped'
-  validate :validate_client_not_empty, :on => :create
-  validate :validate_project_name_not_empty, :on => :create
-  validate :validate_harvest_project_id, :on => :create
-  validate :validate_pivotal_project_id, :on => :create
+  validates_uniqueness_of :harvest_project_id, message: ' has been mapped'
+  validates_uniqueness_of :pivotal_project_id, message: ' has been mapped'
+  validate :validate_client_not_empty, :on => :create, :unless => :project_already_exist?
+  validate :validate_project_name_not_empty, :on => :create, :unless => :project_already_exist?
+  validate :validate_harvest_project_id, :on => :create, :if => :project_already_exist?
+  validate :validate_pivotal_project_id, :on => :create, :if => :project_already_exist?
 
-  before_create :prepare_integration
-  after_create :assign_person_mapping
+  before_create :retrieve_existing_project, :if => :project_already_exist?
+  
+  before_create :create_remote_project, :unless => :project_already_exist?
+  before_create :assign_person_mapping
+  before_update :assign_person_mapping
 
   def harvest_api
     @harvest_api ||= Api::HarvestClient.new(self.user)
@@ -33,34 +37,47 @@ class Project < ActiveRecord::Base
     @pivotal_api ||= Api::PivotalClient.new(self.user)
   end
 
-  def prepare_integration
-    #For automated project mapping creation
-    if self.selection.eql? "auto"
-      harvest_project = harvest_api.create_project(self)
-      pivotal_project = pivotal_api.create_project(self.project_name, self.pivotal_start_iteration)
+  def project_already_exist?
+    p "#{self.harvest_project_id.blank?} and #{self.pivotal_project_id.blank?}"
+    !self.harvest_project_id.blank? && !self.pivotal_project_id.blank?
+  end
 
-      puts "pivotal_project #{pivotal_project.inspect}"
-      puts "harvest project =  #{harvest_project.inspect}"
-      if harvest_project.blank? || harvest_project.id.blank?
-        errors.add(:project_name, ' Failed to create new project in Harvest')
-      elsif pivotal_project.blank? || pivotal_project.id.blank?
-        errors.add(:project_name, ' Failed to create new project in Pivotal Tracker')
-      end
+  def create_remote_project
+    pivotal_project = pivotal_api.create_project(self.project_name, self.pivotal_start_iteration)
+    harvest_project = harvest_api.create_project(self)
+    
+    p harvest_project.inspect
+    p pivotal_project.inspect
 
-      self.harvest_project_id = harvest_project.id
-      self.pivotal_project_id = pivotal_project.id
-      self.harvest_project_name = project_name
-      self.pivotal_project_name = project_name
-
-      
-    #For manual project mapping creation
-    else
-      self.harvest_project_name = harvest_api.get_harvest_project_name(self.harvest_project_id)
-      self.pivotal_project_name = pivotal_api.get_pivotal_project_name(self.pivotal_project_id)
+    if harvest_project.blank? || harvest_project.id.blank?
+      errors.add(:project_name, ' Failed to create new project in Harvest')
+    elsif pivotal_project.blank? || pivotal_project.id.blank?
+      errors.add(:project_name, ' Failed to create new project in Pivotal Tracker')
     end
+
+    self.harvest_project_id = harvest_project.id
+    self.pivotal_project_id = pivotal_project.id
+    self.harvest_project_name = project_name
+    self.pivotal_project_name = project_name
+  end
+
+  def retrieve_existing_project
+    harvest_project = harvest_api.find_project(self.harvest_project_id)
+    pivotal_project = pivotal_api.find_project(self.pivotal_project_id)
+
+    self.pivotal_project_name = pivotal_project.name
+    self.pivotal_start_iteration = pivotal_project.week_start_day
+
+    self.harvest_project_name = harvest_project.name
+    self.harvest_billable = harvest_project.billable.to_s
+    self.harvest_budget = harvest_project.cost_budget
+    self.harvest_project_code = harvest_project.code
+
+    self.project_name = pivotal_project.name
   end
 
   def assign_person_mapping
+    project_member = []
     self.person_ids.each do |mapping_id|
       person = Person.find(mapping_id)
 
@@ -71,48 +88,28 @@ class Project < ActiveRecord::Base
 
       user_assignment = harvest_api.assign_user(self.harvest_project_id, person.harvest_id)
 
-      pm = PersonMapping.new(person_id: person.id, integration_id: self.id)
-      pm.save
-    end if (self.selection.eql? "auto") && !self.person_ids.blank?
-  end
-
-  def create_mapping(pivotal_user, harvest_user)
-    pm = person_mappings.build
-    pm.pivotal_id = pivotal_user.id
-    pm.pivotal_name = pivotal_user.name
-    pm.pivotal_email = pivotal_user.email
-    pm.harvest_id = harvest_user.id
-    pm.harvest_name = "#{harvest_user.try(:first_name)} #{harvest_user.try(:last_name)}"
-    pm.harvest_email = harvest_user.email
-    pm
+      project_member << person
+    end unless self.person_ids.blank?
+    self.people = project_member
   end
 
   def to_s
     "#{harvest_project_name} - #{pivotal_project_name}"
   end
 
-  def budget_category
-    @budget_category ||= {"project" => "Total project hours", "project_cost" => "Total project fees", "task" => "Hours per task",
-        "person" => "Hours per person"}
-  end
-
-  def week_day_options
-    @week_day_options ||= {"0"=>"Sunday", "1"=>"Monday", "2"=>"Tuesday", "3"=>"Wednesday", "4"=>"Thursday", "5"=>"Friday", "6"=>"Saturday"}
-  end
-
   def validate_client_not_empty
-      errors.add(:client_id, " is required") if (selection.eql? "auto") && client_id.blank?
+      errors.add(:client_id, " is required") if client_id.blank?
   end
 
   def validate_project_name_not_empty
-      errors.add(:project_name, " is required") if (selection.eql? "auto") && project_name.blank?
+      errors.add(:project_name, " is required") if project_name.blank?
   end
 
   def validate_harvest_project_id
-      errors.add(:harvest_project_id, " is required") if (selection.eql? "manual") && harvest_project_id.blank?
+      errors.add(:harvest_project_id, " is required") if harvest_project_id.blank?
   end
 
   def validate_pivotal_project_id
-      errors.add(:pivotal_project_id, " is required") if (selection.eql? "manual") && pivotal_project_id.blank?
+      errors.add(:pivotal_project_id, " is required") if pivotal_project_id.blank?
   end
 end

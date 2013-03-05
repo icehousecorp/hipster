@@ -10,14 +10,9 @@ Pivotalharvested::Application.routes.draw do
     end
     collection do
       get 'reload'
-    end
-    resources :person_mappings, except: [:show, :edit, :destroy] do
-      member do
-        get 'populate'
-      end
+      get 'new_link'
     end
   end
-  resources :person_mappings, only: [:show, :edit, :destroy]
   resources :xero, only: [:index, :new] do
     collection do
         get 'purchase'
@@ -25,6 +20,7 @@ Pivotalharvested::Application.routes.draw do
         post 'test'
     end
   end
+  resources :person_mappings, only: [:destroy]
 
   root to: "home#index"
   resources :users, except: [:new, :index, :create] do

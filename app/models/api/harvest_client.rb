@@ -67,9 +67,9 @@ class Api::HarvestClient
       project.client_id = integration.client_id
       project.code = integration.harvest_project_code
       project.billable = integration.harvest_billable
-      project.budget_by = integration.harvest_budget
+      project.budget_by = "project_cost"  #always use project_cost option
+      project.cost_budget = integration.harvest_budget
 
-      puts project.inspect
       project = @client.projects.create(project)
       puts "After #{project.inspect}"
       project
@@ -96,7 +96,7 @@ class Api::HarvestClient
 
   def get_project_manager_harvest_id(project_id)
     Rails.cache.fetch('harvest_manager_#{project_id}', expires_in: CACHE_PERIODE) do
-      safe_invoke Hash[:project_id] do |args| 
+      safe_invoke Hash[:project_id=>project_id] do |args| 
         pm_assignments = @client.user_assignments.all(args[:project_id]).select do |asg|
           asg.is_project_manager?
         end
@@ -111,16 +111,17 @@ class Api::HarvestClient
     p.name if !p.blank?
   end
 
-  def get_harvest_project(id)
-    safe_invoke [] { @client.projects.find(id) }
-  end
-
-  def get_harvest_user_by_email(integration_id, project_id, email_address)
-    cached_users(integration_id, project_id).select do |harvest_user|
-      puts "email #{email_address} and harvest #{harvest_user.email}"
-      email_address.eql? harvest_user.email
+  def find_project(project_id)
+    safe_invoke Hash[:project_id=>project_id] do |args|
+       @client.projects.find(args[:project_id])
     end
   end
+
+  # def get_harvest_user_by_email(integration_id, project_id, email_address)
+  #   cached_users(integration_id, project_id).select do |harvest_user|
+  #     email_address.eql? harvest_user.email
+  #   end
+  # end
 
   def all_clients
     safe_invoke [] { @client.clients.all }
@@ -154,6 +155,12 @@ class Api::HarvestClient
       assignment.project_id = args[:project_id]
       @client.task_assignments.create(assignment)
       task
+    end
+  end
+
+  def new_user(first_name, last_name, email)
+    safe_invoke Hash[:first_name=>first_name, :last_name=>last_name, :email=>email] do |args|
+      @client.users.create(first_name: args[:first_name], last_name: args[:last_name] ,email: args[:email])
     end
   end
 
