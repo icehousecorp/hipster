@@ -59,20 +59,11 @@ class Api::HarvestClient
     oauth_client.auth_code.get_token(code,{:redirect_uri => redirect_uri})
   end
 
-  def create_project(integration)
-    safe_invoke Hash[:integration => integration] do |args|
-      integration = args[:integration]
-      project = Harvest::Project.new
-      project.name = integration.project_name
-      project.client_id = integration.client_id
-      project.code = integration.harvest_project_code
-      project.billable = integration.harvest_billable
-      project.budget_by = integration.harvest_budget
-
-      puts project.inspect
+  def create_project(project_name, client_id)
+    safe_invoke Hash[:project_name => project_name, :client_id => client_id] do |args|
+      project = Harvest::Project.new(:name => args[:project_name], :client_id => args[:client_id])
+      
       project = @client.projects.create(project)
-      puts "After #{project.inspect}"
-      project
     end
   end
 
