@@ -14,8 +14,8 @@
       <%= f.input :project_name %>
       <%= f.input :harvest_project_code, :label => 'Project Code' %>
       <%= f.input :harvest_billable, as: :select, :label => 'Billable' %>
-      <%= f.input :harvest_budget, :label => 'Budget' %>
-      <%= f.input :pivotal_start_iteration, as: :select, :label => 'Start Iteration', collection: [['Sunday','Sunday'],['Monday','Monday'],['Tuesday','Tuesday'],['Wednesday','Wednesday'],['Thursday','Thursday'],['Friday','Friday'],['Saturday','Saturday']] %>
+      <%= f.input :harvest_budget, :label => 'Budget ($)' %>
+      <%= f.input :pivotal_start_iteration, as: :select, :label => 'Start Iteration', collection: Date::DAYNAMES.zip(Date::DAYNAMES) %>
       <%= f.input :pivotal_start_date, :label => 'Start Date' %>
     <br> <b>Team Member</b>
     <% if @people_list.empty? %>
@@ -26,6 +26,7 @@
       <% end %>
     <% end %>
     <%= f.association :user, as: :hidden %>
+    <%= f.hidden_field :create_method, :value => 'new' %>
   </div>
   <div class="form-submit">
     <%= f.button :submit, :value => 'Create Project' %>

@@ -71,7 +71,6 @@ class Api::HarvestClient
       project.cost_budget = integration.harvest_budget
 
       project = @client.projects.create(project)
-      puts "After #{project.inspect}"
       project
     end
   end
@@ -116,12 +115,6 @@ class Api::HarvestClient
        @client.projects.find(args[:project_id])
     end
   end
-
-  # def get_harvest_user_by_email(integration_id, project_id, email_address)
-  #   cached_users(integration_id, project_id).select do |harvest_user|
-  #     email_address.eql? harvest_user.email
-  #   end
-  # end
 
   def all_clients
     safe_invoke [] { @client.clients.all }

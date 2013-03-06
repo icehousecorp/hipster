@@ -28,12 +28,14 @@ class Api::PivotalClient
     PivotalTracker::Project.find(project_id)
   end
 
-  def create_project(project_name, pivotal_start_iteration)
+  def create_project(project_name, pivotal_start_iteration, pivotal_start_date)
     project = PivotalTracker::Project.new
     project.name = project_name
     project.week_start_day = week_day_options[pivotal_start_iteration]
+    project.start_date = pivotal_start_date
     project.point_scale = "0,1,2,3,5,8"
     project.time_zone = "Jakarta"
+    p project
     project = project.create
   end
 

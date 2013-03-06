@@ -10,23 +10,31 @@ class Project < ActiveRecord::Base
   attr_accessible :harvest_project_code, :harvest_billable, :harvest_budget
   attr_accessible :pivotal_start_iteration, :pivotal_start_date
 
-  attr_accessible :client_id, :person_ids
+  attr_accessible :client_id, :person_ids, :create_method
+  attr_accessor :person_ids, :create_method
+
+  #For new project created through hipster
+  with_options :if => :is_new_project? do |project|
+    project.validates :project_name, :client_id, :pivotal_start_iteration, :pivotal_start_date, :presence => true
+    project.validates :harvest_budget, :format => { :with => /^\d+??(?:\.\d{0,2})?$/ }, :numericality => {:greater_than => 0}
+    project.validate :project_and_sprint_day_match
+
+    project.after_validation :prepare_create
+    
+    project.before_create :project_created_at_pivotal_server
+    project.before_create :project_created_at_harvest_server
+    project.before_create :assign_person_mapping
+  end
+
+  #For existing harvest and pivotal project to integrate through hipster
+  with_options :unless => :is_new_project? do |project|
+    project.validates :harvest_project_id, :pivotal_project_id, :presence => true
+    project.validates :harvest_project_id, :uniqueness => true
+    project.validates :pivotal_project_id, :uniqueness => true
+
+    project.before_create :retrieve_existing_project
+  end
   
-  attr_accessor :person_ids
-
-  validates :harvest_budget, :format => { :with => /^\d+??(?:\.\d{0,2})?$/ }, :numericality => {:greater_than => 0}
-
-  validates_uniqueness_of :harvest_project_id, message: ' has been mapped'
-  validates_uniqueness_of :pivotal_project_id, message: ' has been mapped'
-  validate :validate_client_not_empty, :on => :create, :unless => :project_already_exist?
-  validate :validate_project_name_not_empty, :on => :create, :unless => :project_already_exist?
-  validate :validate_harvest_project_id, :on => :create, :if => :project_already_exist?
-  validate :validate_pivotal_project_id, :on => :create, :if => :project_already_exist?
-
-  before_create :retrieve_existing_project, :if => :project_already_exist?
-  
-  before_create :create_remote_project, :unless => :project_already_exist?
-  before_create :assign_person_mapping
   before_update :assign_person_mapping
 
   def harvest_api
@@ -37,28 +45,37 @@ class Project < ActiveRecord::Base
     @pivotal_api ||= Api::PivotalClient.new(self.user)
   end
 
-  def project_already_exist?
-    p "#{self.harvest_project_id.blank?} and #{self.pivotal_project_id.blank?}"
-    !self.harvest_project_id.blank? && !self.pivotal_project_id.blank?
+  def is_new_project?
+    self.create_method.eql? 'new'
   end
 
-  def create_remote_project
-    pivotal_project = pivotal_api.create_project(self.project_name, self.pivotal_start_iteration)
-    harvest_project = harvest_api.create_project(self)
-    
-    p harvest_project.inspect
-    p pivotal_project.inspect
+  def project_and_sprint_day_match
+    p self.pivotal_start_date
+    errors.add(:pivotal_start_iteration, " does not match project start date") unless Date.parse(self.pivotal_start_date).strftime("%A").eql? self.pivotal_start_iteration
+  rescue ArgumentError
+    #catch if the date format is invalid
+    errors.add(:pivotal_start_date, " is invalid")
+  end
 
-    if harvest_project.blank? || harvest_project.id.blank?
-      errors.add(:project_name, ' Failed to create new project in Harvest')
-    elsif pivotal_project.blank? || pivotal_project.id.blank?
-      errors.add(:project_name, ' Failed to create new project in Pivotal Tracker')
-    end
+  def project_created_at_pivotal_server
+    start_date_formatted = Date.parse(self.pivotal_start_date).strftime("%m/%d/%Y")
+    pivotal_project = pivotal_api.create_project(self.project_name, self.pivotal_start_iteration, start_date_formatted)
+    p pivotal_project.inspect
+    
+    self.pivotal_project_id = pivotal_project.id
+    errors.add(:project_name, ' Failed to create new project in Harvest') if pivotal_project.blank? || pivotal_project.id.blank?
+  end
+
+  def project_created_at_harvest_server
+    harvest_project = harvest_api.create_project(self)
 
     self.harvest_project_id = harvest_project.id
-    self.pivotal_project_id = pivotal_project.id
-    self.harvest_project_name = project_name
-    self.pivotal_project_name = project_name
+    errors.add(:project_name, ' Failed to create new project in Harvest') if harvest_project.blank? || harvest_project.id.blank?
+  end
+
+  def prepare_create
+    self.harvest_project_name = self.project_name
+    self.pivotal_project_name = self.project_name
   end
 
   def retrieve_existing_project
@@ -67,6 +84,7 @@ class Project < ActiveRecord::Base
 
     self.pivotal_project_name = pivotal_project.name
     self.pivotal_start_iteration = pivotal_project.week_start_day
+    self.pivotal_start_date = pivotal_project.start_date 
 
     self.harvest_project_name = harvest_project.name
     self.harvest_billable = harvest_project.billable.to_s
@@ -95,21 +113,5 @@ class Project < ActiveRecord::Base
 
   def to_s
     "#{harvest_project_name} - #{pivotal_project_name}"
-  end
-
-  def validate_client_not_empty
-      errors.add(:client_id, " is required") if client_id.blank?
-  end
-
-  def validate_project_name_not_empty
-      errors.add(:project_name, " is required") if project_name.blank?
-  end
-
-  def validate_harvest_project_id
-      errors.add(:harvest_project_id, " is required") if harvest_project_id.blank?
-  end
-
-  def validate_pivotal_project_id
-      errors.add(:pivotal_project_id, " is required") if pivotal_project_id.blank?
   end
 end

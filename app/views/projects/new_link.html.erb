@@ -15,6 +15,7 @@
     <%= f.input :pivotal_project_id, as: :select, collection: @pivotal_projects %>
    
     <%= f.association :user, as: :hidden %>
+    <%= f.hidden_field :create_method, :value => 'existing' %>
   </div>
   <div class="form-submit">
     <%= f.button :submit, :value => 'Link Project' %>

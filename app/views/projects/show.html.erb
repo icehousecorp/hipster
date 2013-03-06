@@ -71,8 +71,6 @@
         <th>Harvest</th>
         <th>Pivotal</th>
         <th></th>
-        <th></th>
-        <th></th>
       </tr>
     </thead>
 
@@ -80,8 +78,7 @@
     <tbody>
       <tr>
         <td><%= mapping.person.harvest_info %></td>
-        <td><%= mapping.person.pivotal_info %></td>
-        
+        <td><%= mapping.person.pivotal_info %></td>   
         <td><%= link_to 'Remove', mapping, method: :delete, data: { confirm: 'Are you sure?' } %></td>
       </tr>
     </tbody>
