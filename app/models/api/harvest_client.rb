@@ -118,6 +118,7 @@ class Api::HarvestClient
     cached_users(integration_id, project_id).select do |harvest_user|
       puts "email #{email_address} and harvest #{harvest_user.email}"
       email_address.eql? harvest_user.email
+    end
   end
 
   def find_project(project_id)
