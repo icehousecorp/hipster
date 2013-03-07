@@ -107,7 +107,7 @@ class Project < ActiveRecord::Base
 
       project_member << person
     end unless self.person_ids.blank?
-    self.people    project_member
+    self.people = self.people + project_member
   end
 
   def to_s
