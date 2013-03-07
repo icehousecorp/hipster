@@ -13,6 +13,7 @@ Pivotalharvested::Application.routes.draw do
       get 'new_link'
     end
   end
+
   resources :xero, only: [:index, :new] do
     collection do
         get 'purchase'
@@ -29,9 +30,10 @@ Pivotalharvested::Application.routes.draw do
     end
   end
 
-  match 'harvest' =>'harvest#index'
-  
 
+  match 'harvest' =>'harvest#index'
+  match 'integrations/:id/callback' => 'projects#callback'
+  
   match 'logout' => 'home#logout'
   match 'auth/google_oauth2/callback' => 'home#google_oauth2'
   match 'auth/harvest/callback' => 'home#harvest'
