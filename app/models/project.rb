@@ -10,7 +10,7 @@ class Project < ActiveRecord::Base
   attr_accessible :harvest_project_code, :harvest_billable, :harvest_budget
   attr_accessible :pivotal_start_iteration, :pivotal_start_date
 
-  attr_accessible :client_id, :person_ids, :create_method
+  attr_accessible :person_ids, :create_method
   attr_accessor :person_ids, :create_method
 
   #For new project created through hipster
@@ -81,6 +81,8 @@ class Project < ActiveRecord::Base
     harvest_project = harvest_api.find_project(self.harvest_project_id)
     pivotal_project = pivotal_api.find_project(self.pivotal_project_id)
 
+    self.client_id = harvest_project.client_id
+    
     self.pivotal_project_name = pivotal_project.name
     self.pivotal_start_iteration = pivotal_project.week_start_day
     self.pivotal_start_date = pivotal_project.start_date 
