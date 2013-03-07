@@ -45,7 +45,7 @@ class ProjectsController < ApplicationController
 
   def callback
     activity = ActivityParam.new(params)
-    harvest_user = PersonMapping.where(pivotal_name: activity.author, integration_id: @project.id).first
+    harvest_user = @project.people.where(pivotal_name: activity.author).first
     harvest_id = harvest_user.harvest_id unless harvest_user.nil?
 
     case activity.type
@@ -56,10 +56,10 @@ class ProjectsController < ApplicationController
       TaskStory.create(task_id: task.id, story_id: activity.story_id)
     when ActivityParam::START_STORY
       task_id = find_task_for_story(activity.story_id)
-      harvest_api.start_task(task_id, @project.harvest_project_id, harvest_id)
+      harvest_api.start_task(task_id, @project.harvest_project_id, harvest_id) unless harvest_id.blank?
     when ActivityParam::FINISH_STORY
       task_id = find_task_for_story(activity.story_id)
-      harvest_api.stop_task(task_id, harvest_id)
+      harvest_api.stop_task(task_id, harvest_id) unless harvest_id.blank?
     else
       # do nothing just log it
     end
@@ -111,7 +111,9 @@ class ProjectsController < ApplicationController
 
   def edit
     @project = Project.find(params[:id])
-    find_people_list
+    find_people_list.select do |person| 
+      !@project.people.include? person
+    end
 
     respond_to do |format|
       format.html # new.html.erb
@@ -153,7 +155,9 @@ class ProjectsController < ApplicationController
     if @project.save
       redirect_to detail_project_path(@project), notice: 'Project had been updated successfully.'
     else
-      find_people_list
+      find_people_list.select do |person| 
+        !@project.people.include? person
+      end
       render action: "edit"
     end
   end

@@ -50,7 +50,6 @@ class Project < ActiveRecord::Base
   end
 
   def project_and_sprint_day_match
-    p self.pivotal_start_date
     errors.add(:pivotal_start_iteration, " does not match project start date") unless Date.parse(self.pivotal_start_date).strftime("%A").eql? self.pivotal_start_iteration
   rescue ArgumentError
     #catch if the date format is invalid
@@ -108,7 +107,7 @@ class Project < ActiveRecord::Base
 
       project_member << person
     end unless self.person_ids.blank?
-    self.people = project_member
+    self.people    project_member
   end
 
   def to_s

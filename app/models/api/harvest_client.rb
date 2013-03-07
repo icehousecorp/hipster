@@ -19,7 +19,7 @@ class Api::HarvestClient
     rescue *NON_AUTHENTICATION_HARVEST_EXCEPTIONS => e
       puts e.inspect
       if !args[:email_message].blank?
-        email_address = PersonMapping.where(harvest_id: args[:harvest_user_id]).first.harvest_email
+        email_address = Person.where(harvest_id: args[:harvest_user_id]).first.harvest_email
         UserMailer.alert_email(email_address, "#{args[:email_message]}<br>#{e.inspect}").deliver
       end
     end
