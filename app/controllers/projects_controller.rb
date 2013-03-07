@@ -1,12 +1,11 @@
-class IntegrationsController < ApplicationController
+class ProjectsController < ApplicationController
   CACHE_PERIODE = 3.minutes
   before_filter :find_user, except: [:callback, :reload]
   before_filter :initialize_callback, only: [:callback]
-  before_filter :fetch_projects, :fetch_clients, only: [:new , :edit]
 
   def find_user
-    @user = User.find(params[:user_id])
-    if @user.harvest_secret.blank? || @user.harvest_subdomain.blank? || @user.harvest_identifier.blank? || @user.pivotal_token.blank?
+    @user = current_user
+    if @user.nil? || @user.harvest_secret.blank? || @user.harvest_subdomain.blank? || @user.harvest_identifier.blank? || @user.pivotal_token.blank?
       redirect_to edit_user_path(@user), notice: "Incomplete user profile"
     end
     @user
@@ -23,10 +22,10 @@ class IntegrationsController < ApplicationController
 
   def fetch_projects
     @harvest_projects ||= harvest_api.cached_projects.select do |project_entry|
-          Integration.where(harvest_project_id: project_entry.id).first.nil?
+          Project.where(harvest_project_id: project_entry.id).first.nil?
       end
     @pivotal_projects ||= pivotal_api.cached_projects.select do |project_entry|
-          Integration.where(pivotal_project_id: project_entry.id).first.nil?
+          Project.where(pivotal_project_id: project_entry.id).first.nil?
       end
   end
 
@@ -40,27 +39,27 @@ class IntegrationsController < ApplicationController
   end
 
   def initialize_callback
-    @integration = Integration.find(params[:id])
-    @current_user = @integration.user
+    @project = Project.find(params[:id])
+    @current_user = @project.user
   end
 
   def callback
     activity = ActivityParam.new(params)
-    harvest_user = PersonMapping.where(pivotal_name: activity.author, integration_id: @integration.id).first
+    harvest_user = @project.people.where(pivotal_name: activity.author).first
     harvest_id = harvest_user.harvest_id unless harvest_user.nil?
 
     case activity.type
     when ActivityParam::CREATE_STORY
-      harvest_id ||= harvest_api.get_project_manager_harvest_id(@integration.harvest_project_id)
+      harvest_id ||= harvest_api.get_project_manager_harvest_id(@project.harvest_project_id)
       puts "Using harvest id #{harvest_id}"
-      task = harvest_api.create(activity.task_name, @integration.harvest_project_id, harvest_id)
+      task = harvest_api.create(activity.task_name, @project.harvest_project_id, harvest_id)
       TaskStory.create(task_id: task.id, story_id: activity.story_id)
     when ActivityParam::START_STORY
       task_id = find_task_for_story(activity.story_id)
-      harvest_api.start_task(task_id, @integration.harvest_project_id, harvest_id)
+      harvest_api.start_task(task_id, @project.harvest_project_id, harvest_id) unless harvest_id.blank?
     when ActivityParam::FINISH_STORY
       task_id = find_task_for_story(activity.story_id)
-      harvest_api.stop_task(task_id, harvest_id)
+      harvest_api.stop_task(task_id, harvest_id) unless harvest_id.blank?
     else
       # do nothing just log it
     end
@@ -69,94 +68,108 @@ class IntegrationsController < ApplicationController
     head :no_content
   end
 
-  # GET /integrations
-  # GET /integrations.json
+  # GET /projects
+  # GET /projects.json
   def index
-    @integrations = Integration.all
+    @projects = Project.all
 
     respond_to do |format|
       format.html # index.html.erb
-      format.json { render json: @integrations }
+      format.json { render json: @projects }
     end
   end
 
-  # GET /integrations/1
-  # GET /integrations/1.json
+  # GET /projects/1
+  # GET /projects/1.json
   def show
-    @integration = Integration.find(params[:id])
-    # @person_mappings = PersonMapping.where(integration_id: params[:id])
-
-    # respond_to do |format|
-      render :template => "layouts/webhook", :layout => nil
-      # format.html # show.html.erb
-      # format.json { render json: @integration }
-    # end
+    @project = Project.find(params[:id])
+    
+    render :template => "layouts/webhook", :layout => nil
   end
 
   def detail
-    @integration = Integration.find(params[:id])
-    @person_mappings = PersonMapping.where(integration_id: params[:id])
+    @project = Project.find(params[:id])
     render "show"
   end
 
-  def find_other_person_mappings
-    @person_mappings ||= PersonMapping.where(integration_id: @integration.id)
-    @other_person_mappings ||= PersonMapping.group([:pivotal_name, :harvest_name]).select do |record|
-        !@person_mappings.include? record
-    end
+  def find_people_list
+    @people_list ||= Person.all
   end
 
-  # GET /integrations/new
-  # GET /integrations/new.json
+  # GET /projects/new
+  # GET /projects/new.json
   def new
-    @integration = Integration.new(user_id: params[:user_id])
-    find_other_person_mappings
+    @project = Project.new(user_id: current_user.id)
+    find_people_list
+    fetch_clients
 
     respond_to do |format|
       format.html # new.html.erb
-      format.json { render json: @integration }
+      format.json { render json: @project }
     end
   end
 
-  # GET /integrations/1/edit
   def edit
-    @integration = Integration.find(params[:id])
+    @project = Project.find(params[:id])
+    find_people_list.select do |person| 
+      !@project.people.include? person
+    end
+
+    respond_to do |format|
+      format.html # new.html.erb
+      format.json { render json: @project }
+    end
   end
 
-  # POST /integrations
-  # POST /integrations.json
+  # GET /projects/new_link
+  # GET /projects/new_link.json
+  def new_link
+    @project = Project.new(user_id: current_user.id)
+    fetch_projects
+
+    respond_to do |format|
+      format.html # new.html.erb
+      format.json { render json: @project }
+    end
+  end
+
+  # POST /projects
+  # POST /projects.json
   def create
-    @integration = Integration.new(params[:integration])
-    if @integration.save
-      redirect_to user_integration_path(@user, @integration), notice: 'Integration was successfully created.'
+    @project = Project.new(params[:project])
+    if @project.save
+      redirect_to project_path(@project), notice: 'Project had been created successfully.'
     else
-      fetch_projects
+      find_people_list
       fetch_clients
       render action: "new"
     end
   end
 
-  # PUT /integrations/1
-  # PUT /integrations/1.json
+   # POST /projects
+  # POST /projects.json
   def update
-    @integration = Integration.find(params[:id])
+    @project = Project.find(params[:id])
+    @project.person_ids = params[:project][:person_ids]
 
-    if @integration.update_attributes(integration_param)
-      redirect_to user_integration_path(@user, @integration), notice: 'Integration was successfully updated.'
+    if @project.save
+      redirect_to detail_project_path(@project), notice: 'Project had been updated successfully.'
     else
-      fetch_projects
+      find_people_list.select do |person| 
+        !@project.people.include? person
+      end
       render action: "edit"
     end
   end
 
-  # DELETE /integrations/1
-  # DELETE /integrations/1.json
+  # DELETE /projects/1
+  # DELETE /projects/1.json
   def destroy
-    @integration = Integration.find(params[:id])
-    @integration.destroy
+    @project = Project.find(params[:id])
+    @project.destroy
 
     respond_to do |format|
-      format.html { redirect_to user_integrations_url(@integration.user) }
+      format.html { redirect_to projects_url }
       format.json { head :no_content }
     end
   end

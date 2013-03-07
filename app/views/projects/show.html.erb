@@ -1,0 +1,94 @@
+<div class="row-fluid">
+  <h2>Project</h2>
+  <% if notice %>
+  <div class="alert alert-success">
+    <%= notice %>
+    <a class="close" data-dismiss="alert" href="#">&times;</a>
+  </div>
+  <% end %>
+
+  <div class="detail">
+    <p>
+      <b>Project Name</b>
+      : <%= @project.project_name %>
+    </p>
+
+    <p>
+      <b>Harvest Project</b>
+      : <%= @project.harvest_project_id %> - <%= @project.harvest_project_name %>
+    </p>
+
+    <p>
+      <b>Pivotal Project</b>
+      : <%= @project.pivotal_project_id %> - <%= @project.pivotal_project_name %>
+    </p>
+
+    <p>
+      <b>Project Code</b>
+      : <%= @project.harvest_project_code %>
+    </p>
+
+     <p>
+      <b>Billable</b>
+      : <%= @project.harvest_billable %>
+    </p>
+
+     <p>
+      <b>Budget</b>
+      : <%= @project.harvest_budget %>
+    </p>
+
+     <p>
+      <b>Start Iteration</b>
+      : <%= @project.pivotal_start_iteration %>
+    </p>
+
+     <p>
+      <b>Start Date</b>
+      : <%= @project.pivotal_start_date %>
+    </p>
+
+    <p>
+      <b>Project Manager</b>
+      : <%= @project.user %>
+    </p>
+
+    <p>
+      <b>Callback</b>
+      : <%= callback_project_url(@project) %>
+    </p>
+  </div>
+
+<div class="row-fluid">
+  <h2>Project Member</h2>
+
+<% if @project.person_mappings.empty? %>
+  No Member found.
+<% else %>
+<table class="table">
+    <thead>
+      <tr>
+        <th>Harvest</th>
+        <th>Pivotal</th>
+        <th></th>
+      </tr>
+    </thead>
+
+  <% @project.person_mappings.each do |mapping| %>
+    <tbody>
+      <tr>
+        <td><%= mapping.person.harvest_info %></td>
+        <td><%= mapping.person.pivotal_info %></td>   
+        <td><%= link_to 'Remove', mapping, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+      </tr>
+    </tbody>
+  <% end %>
+  </table>
+  <% end %>
+</div>
+  <div class="form-submit">
+    <%= link_to 'Assign Member', edit_project_path(@project), class: 'btn' %>
+    <%= link_to 'Back', projects_path, class: 'btn' %>
+  </div>
+  <br/>
+</div>

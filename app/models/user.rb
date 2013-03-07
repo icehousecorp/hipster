@@ -6,14 +6,7 @@ class User < ActiveRecord::Base
   validates(:username, :presence => true)
 
   has_many :identities
-  # validates(:harvest_password, :presence => true)
-  # validates(:harvest_subdomain, :presence => true)
-  # validates(:harvest_id, :presence => true)
-  # validates(:harvest_username, :presence => true)
-  # validates(:pivotal_id, :presence => true)
-  # validates(:pivotal_username, :presence => true)
-  # validates(:pivotal_password, :presence => true)
-
+  
   def to_s
     "#{username}"
   end

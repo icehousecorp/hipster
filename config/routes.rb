@@ -1,35 +1,44 @@
 Pivotalharvested::Application.routes.draw do
 
-  resources :integrations, only: []  do
+  resources :people
+
+
+  resources :projects  do
     member do
       post 'callback'
+      get 'detail'
     end
     collection do
       get 'reload'
-    end
-    resources :person_mappings, except: [:show, :edit, :destroy] do
-      member do
-        get 'populate'
-      end
+      get 'new_link'
     end
   end
-  resources :person_mappings, only: [:show, :edit, :destroy]
+
+  resources :xero, only: [:index, :new] do
+    collection do
+        get 'purchase'
+        get 'complete'
+        post 'test'
+    end
+  end
+  resources :person_mappings, only: [:destroy]
 
   root to: "home#index"
   resources :users, except: [:new, :index, :create] do
     member do
       get 'confirm_harvest'
     end
-    resources :integrations do
-      member do
-        get 'detail'
-      end
-    end
   end
 
+
+  match 'harvest' =>'harvest#index'
+  match 'integrations/:id/callback' => 'projects#callback'
+  
   match 'logout' => 'home#logout'
   match 'auth/google_oauth2/callback' => 'home#google_oauth2'
   match 'auth/harvest/callback' => 'home#harvest'
+
+  mount Hiro::Engine => "/hiro"
 
   # The priority is based upon order of creation:
   # first created -> highest priority.

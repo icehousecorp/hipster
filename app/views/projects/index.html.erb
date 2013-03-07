@@ -1,0 +1,36 @@
+<div class="row-fluid">
+  <h2>Projects</h2>
+ 
+ <% if @projects.empty? %>
+ <p>No Projects found</p>
+ <% else %>
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Harvest project</th>
+        <th>Pivotal project</th>
+        <th>User</th>
+        <th></th>
+        <th></th>
+        <th></th>
+      </tr>
+    </thead>
+
+  <% @projects.each do |project| %>
+      <tbody>
+        <tr>
+        <td><%= project.harvest_project_id %> - <%= project.harvest_project_name %></td>
+        <td><%= project.pivotal_project_id %> - <%= project.pivotal_project_name %></td>
+        <td><%= project.user %></td>
+        <td><%= link_to 'Show', detail_project_path(project.id) if project.user.id==@user.id %></td>
+        <td><%= link_to 'Destroy', project_path(project.id), method: :delete, data: { confirm: "Are you sure? \nThe project in harvest and pivotal tracker will remain unchanged." } if project.user.id==@user.id %></td>
+      </tr>
+      </tbody>
+  <% end %>
+  </table>
+
+  <% end %>
+  <%= link_to 'New Project', new_project_path, class: 'btn' %>
+  <%= link_to 'Link Existing Project', new_link_projects_path, class: 'btn' %>
+</div>
+
