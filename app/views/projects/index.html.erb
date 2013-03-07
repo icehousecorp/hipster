@@ -23,7 +23,7 @@
         <td><%= project.pivotal_project_id %> - <%= project.pivotal_project_name %></td>
         <td><%= project.user %></td>
         <td><%= link_to 'Show', detail_project_path(project.id) if project.user.id==@user.id %></td>
-        <td><%= link_to 'Destroy', project_path(project.id), method: :delete, data: { confirm: 'Are you sure?' } if project.user.id==@user.id %></td>
+        <td><%= link_to 'Destroy', project_path(project.id), method: :delete, data: { confirm: "Are you sure? \nThe project in harvest and pivotal tracker will remain unchanged." } if project.user.id==@user.id %></td>
       </tr>
       </tbody>
   <% end %>
