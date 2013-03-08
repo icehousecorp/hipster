@@ -210,7 +210,7 @@ class Api::HarvestClient
 
   def find_entry(user_id, task_id)
     entries = @client.time.all(Time.now, user_id).select do |entry|
-      entry.task_id.to_i == task_id.to_i && entry.ended_at.blank? && !entry.started_at.blank?
+      entry.task_id.to_i == task_id.to_i && entry.ended_at.blank? && !entry.timer_started_at.blank?
     end
   end
 
