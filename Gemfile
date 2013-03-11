@@ -32,6 +32,11 @@ group :assets do
   gem 'uglifier', '>= 1.0.3'
 end
 
+group :development, :test do
+	gem 'rspec-rails'
+	gem 'shoulda-matchers'
+end
+
 gem "jquery-rails", "~> 2.2.1"
 gem "bootstrap-sass", "~> 2.2.2.0"
 
