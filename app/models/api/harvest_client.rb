@@ -13,14 +13,18 @@ class Api::HarvestClient
     begin
       yield(args)
     rescue Harvest::AuthenticationFailed
-      refresh_token!
+      result = refresh_token!
       attempt += 1
-      retry unless attempt > 2
+      retry if attempt < 3 
+      if attempt >= 3 && !result
+        email_address = Person.where(harvest_id: args[:harvest_user_id]).first.harvest_email
+        UserMailer.alert_email(email_address, "PLease go to your Hipster Profile and click Confirm Harvest Connection").deliver
+      end
     rescue *NON_AUTHENTICATION_HARVEST_EXCEPTIONS => e
       puts e.inspect
       if !args[:email_message].blank?
         email_address = Person.where(harvest_id: args[:harvest_user_id]).first.harvest_email
-        UserMailer.alert_email(email_address, "#{args[:email_message]}<br>#{e.inspect}").deliver
+        UserMailer.alert_email(email_address, "#{args[:email_message]}<br/>#{e.inspect}").deliver
       end
     end
   end
@@ -46,6 +50,8 @@ class Api::HarvestClient
 
     @client = Harvest.token_client(user.harvest_subdomain, user.harvest_token, ssl: true) if user.harvest_token
     user.save
+    rescue OAuth2::Error
+      false
   end
 
   def token(code, redirect_uri)
@@ -135,6 +141,10 @@ class Api::HarvestClient
     safe_invoke [] { @client.projects.all }
   end
 
+  def all_tasks
+    safe_invoke [] { @client.tasks.all }
+  end
+
   def all_users(project_id)
     safe_invoke Hash[:project_id => project_id] do |args|
        assignments = @client.user_assignments.all(args[:project_id])
@@ -204,7 +214,7 @@ class Api::HarvestClient
 
   def find_entry(user_id, task_id)
     entries = @client.time.all(Time.now, user_id).select do |entry|
-      entry.task_id.to_i == task_id.to_i && entry.ended_at.blank? && !entry.started_at.blank?
+      entry.task_id.to_i == task_id.to_i && entry.ended_at.blank? && !entry.timer_started_at.blank?
     end
   end
 

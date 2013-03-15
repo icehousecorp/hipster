@@ -33,6 +33,7 @@ class Project < ActiveRecord::Base
     project.validates :pivotal_project_id, :uniqueness => true
 
     project.before_create :retrieve_existing_project
+    project.after_create :create_task_from_existing_project
   end
   
   before_update :assign_person_mapping
@@ -93,6 +94,21 @@ class Project < ActiveRecord::Base
     self.harvest_project_code = harvest_project.code
 
     self.project_name = pivotal_project.name
+  end
+
+  def create_task_from_existing_project
+    #ambil semua task
+    stories = pivotal_api.list_all_story_by_project(self.pivotal_project_id)
+    tasks = harvest_api.all_tasks.map(&:name)
+    harvest_id = harvest_api.get_project_manager_harvest_id(self.harvest_project_id)
+    #loop buat task di harvest
+    #CREATE task story
+    stories.each do |story|
+      tmp = "[##{story.id}] #{story.name}"
+      if !tasks.include? tmp
+        harvest_api.create(tmp, self.harvest_project_id, harvest_id)
+      end
+    end
   end
 
   def assign_person_mapping
