@@ -13,14 +13,18 @@ class Api::HarvestClient
     begin
       yield(args)
     rescue Harvest::AuthenticationFailed
-      refresh_token!
+      result = refresh_token!
       attempt += 1
-      retry unless attempt > 2
+      retry if attempt < 3 
+      if attempt >= 3 && !result
+        email_address = Person.where(harvest_id: args[:harvest_user_id]).first.harvest_email
+        UserMailer.alert_email(email_address, "PLease go to your Hipster Profile and click Confirm Harvest Connection").deliver
+      end
     rescue *NON_AUTHENTICATION_HARVEST_EXCEPTIONS => e
       puts e.inspect
       if !args[:email_message].blank?
         email_address = Person.where(harvest_id: args[:harvest_user_id]).first.harvest_email
-        UserMailer.alert_email(email_address, "#{args[:email_message]}<br>#{e.inspect}").deliver
+        UserMailer.alert_email(email_address, "#{args[:email_message]}<br/>#{e.inspect}").deliver
       end
     end
   end
@@ -46,6 +50,8 @@ class Api::HarvestClient
 
     @client = Harvest.token_client(user.harvest_subdomain, user.harvest_token, ssl: true) if user.harvest_token
     user.save
+    rescue OAuth2::Error
+      false
   end
 
   def token(code, redirect_uri)
@@ -110,6 +116,17 @@ class Api::HarvestClient
     p.name if !p.blank?
   end
 
+  def get_harvest_project(id)
+    safe_invoke [] { @client.projects.find(id) }
+  end
+
+  def get_harvest_user_by_email(integration_id, project_id, email_address)
+    cached_users(integration_id, project_id).select do |harvest_user|
+      puts "email #{email_address} and harvest #{harvest_user.email}"
+      email_address.eql? harvest_user.email
+    end
+  end
+
   def find_project(project_id)
     safe_invoke Hash[:project_id=>project_id] do |args|
        @client.projects.find(args[:project_id])
@@ -122,6 +139,10 @@ class Api::HarvestClient
 
   def all_projects
     safe_invoke [] { @client.projects.all }
+  end
+
+  def all_tasks
+    safe_invoke [] { @client.tasks.all }
   end
 
   def all_users(project_id)
@@ -193,7 +214,7 @@ class Api::HarvestClient
 
   def find_entry(user_id, task_id)
     entries = @client.time.all(Time.now, user_id).select do |entry|
-      entry.task_id.to_i == task_id.to_i && entry.ended_at.blank? && !entry.started_at.blank?
+      entry.task_id.to_i == task_id.to_i && entry.ended_at.blank? && !entry.timer_started_at.blank?
     end
   end
 

@@ -31,14 +31,14 @@ class Person < ActiveRecord::Base
   def last_name(split_name)
     last_name = ''
     if split_name.size >=2
-      (1..split_name.size-1).each do |index|
-        last_name = last_name + split_name[index].gsub(' ','')
-      end
+      split_name.delete(split_name.first)
+      last_name = split_name.join(' ')
     else
       last_name = split_name[0]
     end
     last_name
   end
+
   def harvest_info
   	"#{harvest_id}-#{harvest_name} (#{harvest_email})"
   end
@@ -50,5 +50,4 @@ class Person < ActiveRecord::Base
   def name
     "[#{self.harvest_id}-#{self.harvest_name}] [#{self.pivotal_id}-#{self.pivotal_name}]"
   end
-  
 end
