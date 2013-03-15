@@ -28,6 +28,10 @@ class Api::PivotalClient
     PivotalTracker::Project.find(project_id)
   end
 
+  def list_all_story_by_project(project_id)
+    PivotalTracker::Story.all find_project(project_id) 
+  end
+
   def create_project(project_name, pivotal_start_iteration, pivotal_start_date)
     project = PivotalTracker::Project.new
     project.name = project_name
