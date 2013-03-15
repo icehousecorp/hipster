@@ -24,7 +24,7 @@ class Api::HarvestClient
       puts e.inspect
       if !args[:email_message].blank?
         email_address = Person.where(harvest_id: args[:harvest_user_id]).first.harvest_email
-        UserMailer.alert_email(email_address, "#{args[:email_message]}<br>#{e.inspect}").deliver
+        UserMailer.alert_email(email_address, "#{args[:email_message]}<br/>#{e.inspect}").deliver
       end
     end
   end
@@ -139,6 +139,10 @@ class Api::HarvestClient
 
   def all_projects
     safe_invoke [] { @client.projects.all }
+  end
+
+  def all_tasks
+    safe_invoke [] { @client.tasks.all }
   end
 
   def all_users(project_id)
