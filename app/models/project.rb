@@ -106,7 +106,8 @@ class Project < ActiveRecord::Base
     stories.each do |story|
       tmp = "[##{story.id}] #{story.name}"
       if !tasks.include? tmp
-        harvest_api.create(tmp, self.harvest_project_id, harvest_id)
+        task = harvest_api.create(tmp, self.harvest_project_id, harvest_id)
+        TaskStory.create(task_id: task.id, story_id: story.id)
       end
     end
   end
