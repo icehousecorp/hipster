@@ -111,7 +111,7 @@ class ProjectsController < ApplicationController
 
   def edit
     @project = Project.find(params[:id])
-    find_people_list.select do |person| 
+    find_people_list.select! do |person| 
       !@project.people.include? person
     end
 
@@ -155,7 +155,7 @@ class ProjectsController < ApplicationController
     if @project.save
       redirect_to detail_project_path(@project), notice: 'Project had been updated successfully.'
     else
-      find_people_list.select do |person| 
+      find_people_list.select! do |person| 
         !@project.people.include? person
       end
       render action: "edit"
