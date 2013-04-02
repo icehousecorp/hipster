@@ -113,6 +113,7 @@ class Project < ActiveRecord::Base
   end
 
   def assign_person_mapping
+    pivotal_api
     project_member = []
     self.person_ids.each do |mapping_id|
       person = Person.find(mapping_id)
