@@ -1,4 +1,5 @@
 class UserMailer < ActionMailer::Base
+	include Resque::Mailer
   default from: "hipster-notification@icehousecorp.com"
 
   def alert_email(recipient, message)

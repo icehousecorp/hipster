@@ -54,3 +54,8 @@ gem "bootstrap-sass", "~> 2.2.2.0"
 
 # To use debugger
 # gem 'debugger'
+
+# Background job
+gem 'resque', :require => 'resque/server'
+gem 'resque-pool'
+gem 'resque_mailer'

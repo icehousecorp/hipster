@@ -23,7 +23,7 @@ class HomeController < ApplicationController
   	identity = Identity.where(provider: 'google_oauth2', uid: auth_hash['uid']).first
   	if identity && identity.user_id
       user = identity.user
-      user.update_attributes(email: auth_hash['info']['email'])
+      # user.update_attributes(email: auth_hash['info']['email'])
       redirect_to projects_path
 	  	# redirect_to user_path(identity.user_id)
   	else

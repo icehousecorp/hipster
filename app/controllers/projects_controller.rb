@@ -162,6 +162,11 @@ class ProjectsController < ApplicationController
     end
   end
 
+  def sync_stories
+    Resque.enqueue(SyncStoriesJob, params[:id])
+    redirect_to projects_url, notice: 'Syncronization request has been scheduled successfully in background'
+  end
+
   # DELETE /projects/1
   # DELETE /projects/1.json
   def destroy

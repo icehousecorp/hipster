@@ -7,6 +7,7 @@ Pivotalharvested::Application.routes.draw do
     member do
       post 'callback'
       get 'detail'
+      post 'sync_stories'
     end
     collection do
       get 'reload'
@@ -39,7 +40,8 @@ Pivotalharvested::Application.routes.draw do
   match 'auth/harvest/callback' => 'home#harvest'
 
   mount Hiro::Engine => "/hiro"
-
+  mount Resque::Server, :at => "/resque"
+  
   # The priority is based upon order of creation:
   # first created -> highest priority.
 

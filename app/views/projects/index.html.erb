@@ -1,6 +1,11 @@
 <div class="row-fluid">
   <h2>Projects</h2>
- 
+ <% if notice %>
+  <div class="alert alert-success">
+    <%= notice %>
+    <a class="close" data-dismiss="alert" href="#">&times;</a>
+  </div>
+<% end %>
  <% if @projects.empty? %>
  <p>No Projects found</p>
  <% else %>
@@ -23,6 +28,7 @@
         <td><%= project.pivotal_project_id %> - <%= project.pivotal_project_name %></td>
         <td><%= project.user %></td>
         <td><%= link_to 'Show', detail_project_path(project.id) if project.user.id==@user.id %></td>
+        <td><%= link_to 'Sync Stories', sync_stories_project_path(project.id), method: :post, data: { confirm: "Are you sure? \nThis should not be a used as regular instruction as it would take significant resources on background." } if project.user.id==@user.id %></td>
         <td><%= link_to 'Destroy', project_path(project.id), method: :delete, data: { confirm: "Are you sure? \nThe project in harvest and pivotal tracker will remain unchanged." } if project.user.id==@user.id %></td>
       </tr>
       </tbody>
