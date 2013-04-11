@@ -1,6 +1,6 @@
 class Api::HarvestClient
   attr_accessor :client, :user
-  NON_AUTHENTICATION_HARVEST_EXCEPTIONS = [Harvest::NotFound, Harvest::ServerError, Harvest::BadRequest, Harvest::Unavailable, Harvest::RateLimited, Harvest::InformHarvest]
+  NON_AUTHENTICATION_HARVEST_EXCEPTIONS = [Harvest::ServerError, Harvest::BadRequest, Harvest::Unavailable, Harvest::RateLimited, Harvest::InformHarvest]
   CACHE_PERIODE = 3.minutes
 
   def initialize(user)
@@ -12,6 +12,15 @@ class Api::HarvestClient
     attempt = 0
     begin
       yield(args)
+    rescue Harvest::NotFound
+      admin_user = User.find(4)
+      @client = Harvest.token_client(admin_user.harvest_subdomain, admin_user.harvest_token, ssl: true) if admin_user.harvest_token
+      attempt += 1
+      retry if attempt < 2
+      if attempt >= 2 && !args[:email_message].blank?
+        email_address = Person.where(harvest_id: args[:harvest_user_id]).first.harvest_email
+        UserMailer.alert_email(email_address, "#{args[:email_message]}<br/>#{e.inspect}").deliver
+      end
     rescue Harvest::AuthenticationFailed
       result = refresh_token!
       attempt += 1
