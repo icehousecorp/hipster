@@ -198,6 +198,8 @@ class Api::HarvestClient
   end
 
   def start_task(task_id, harvest_project_id, user_id)
+    return if user_id == nil
+
     email_message = "Failed to start new harvest entry with task id #{task_id} on harvest project id #{harvest_project_id}"
 
     safe_invoke Hash[:task_id => task_id, :harvest_project_id => harvest_project_id, 
@@ -213,6 +215,8 @@ class Api::HarvestClient
   end
 
   def stop_task(task_id, user_id)
+    return if user_id == nil
+    
     email_message = "Failed to stop a harvest entry with task id #{task_id} on user #{user_id}"
 
     safe_invoke Hash[:task_id => task_id, :harvest_user_id => user_id, :email_message => email_message] do |args|
