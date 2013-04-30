@@ -5,7 +5,7 @@ class SyncStoriesJob
 	def self.perform(project_id)
 		project = Project.find(project_id)
 		pivotal_user = project.user
-		admin_user = User.find(4)
+		admin_user = User.find(1)
 
 		PivotalTracker::Client.token = pivotal_user.pivotal_token
 		harvest = Harvest.token_client(admin_user.harvest_subdomain, admin_user.harvest_token, ssl: true)
@@ -23,15 +23,19 @@ class SyncStoriesJob
 		discrepancy = at_pivotal.reject { |x| at_harvest.include? x }.sort
 
 		discrepancy.each do |story_id|
-			pivotal_story = PivotalTracker::Story.find(story_id, pivotal_project.id)
-			task = Harvest::Task.new
-		  task.name = "[##{story_id}] #{pivotal_story.name}"
-		  task = harvest.tasks.create(task)
-		  assignment = Harvest::TaskAssignment.new
-		  assignment.task_id = task.id
-		  assignment.project_id = project.harvest_project_id
-		  harvest.task_assignments.create(assignment)
-		  TaskStory.create(task_id: task.id, story_id: story_id)
+			begin
+				pivotal_story = PivotalTracker::Story.find(story_id, pivotal_project.id)
+				task = Harvest::Task.new
+			  task.name = "[##{story_id}] #{pivotal_story.name}"
+			  task = harvest.tasks.create(task)
+			  assignment = Harvest::TaskAssignment.new
+			  assignment.task_id = task.id
+			  assignment.project_id = project.harvest_project_id
+			  harvest.task_assignments.create(assignment)
+			  TaskStory.create(task_id: task.id, story_id: story_id)
+			rescue => ex
+				puts ex.inspect
+			end
 		end
 	end
 end
