@@ -5,7 +5,7 @@ class SyncStoriesJob
 	def self.perform(project_id)
 		project = Project.find(project_id)
 		pivotal_user = project.user
-		admin_user = User.find(1)
+		admin_user = User.find(4)
 
 		PivotalTracker::Client.token = pivotal_user.pivotal_token
 		harvest = Harvest.token_client(admin_user.harvest_subdomain, admin_user.harvest_token, ssl: true)
