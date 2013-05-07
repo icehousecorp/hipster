@@ -9,12 +9,20 @@ class SyncStoriesJob
 
 		PivotalTracker::Client.token = pivotal_user.pivotal_token
 		harvest = Harvest.token_client(admin_user.harvest_subdomain, admin_user.harvest_token, ssl: true)
+		harvest_api = Api::HarvestClient.new(admin_user)
 
 		pivotal_project = PivotalTracker::Project.find(project.pivotal_project_id)
 
 		at_pivotal = PivotalTracker::Story.all(pivotal_project).map { |x| x.id }.sort
 
-		task_ids = harvest.task_assignments.all(project.harvest_project_id).map { |x| x.task_id }
+		task_ids = nil
+
+		begin
+			task_ids = harvest.task_assignments.all(project.harvest_project_id).map { |x| x.task_id }
+		rescue
+			harvest_api.refresh_token!
+			task_ids = harvest.task_assignments.all(project.harvest_project_id).map { |x| x.task_id }
+		end
 
 		at_harvest = harvest.tasks.all.select { |x|
 			task_ids.include? x.id
@@ -34,6 +42,7 @@ class SyncStoriesJob
 			  harvest.task_assignments.create(assignment)
 			  TaskStory.create(task_id: task.id, story_id: story_id)
 			rescue => ex
+				harvest_api.refresh_token!
 				puts ex.inspect
 			end
 		end
