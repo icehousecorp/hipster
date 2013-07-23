@@ -19,6 +19,7 @@
         <li><%= link_to 'People', main_app.people_path, class: 'btn' %></li>
         <% if Object.const_defined?('Hiro') %>
           <li><%= link_to "Hiro", '/hiro', class: 'btn' %></li>
+          <li><%= link_to "Bank Statement", '/hiro/bank_statements', class: 'btn' %></li>
         <% end %>
         <li><%= link_to "Logout", '/logout', class: 'btn' %></li>
       <% else %>
